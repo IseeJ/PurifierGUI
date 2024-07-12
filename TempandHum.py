@@ -404,7 +404,7 @@ class MainWindow(QMainWindow):
         self.ui.HumPlotWidget2.getAxis('bottom').setStyle(tickTextOffset=10)
         self.ui.HumPlotWidget2.setAxisItems({'bottom': DateAxisItem(orientation='bottom')})
 
-        self.ui.HumPlotWidget2.setLabel("left", "Relative Humidity (%)", **{"color": "blue", "font-size": "18px"})
+        self.ui.HumPlotWidget2.setLabel("left", "Absolute Humidity (ppm)", **{"color": "blue", "font-size": "18px"})
         #self.hum_plot = self.ui.HumPlotWidget2.plot([], [], pen=pg.mkPen(color='b', width=2), name="HUM")
         #self.hum_plot = self.ui.HumPlotWidget2.plot(self.hum_time, self.hum_data['absHUM'], pen=pg.mkPen(color='b', width=2), name="HUM")
         #plot absHUM instead of HUM (relative hum)
