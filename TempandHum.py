@@ -609,7 +609,7 @@ class MainWindow(QMainWindow):
         self.hum_plotLines['DEW'].setData(self.hum_time, self.hum_data['DEW'])
         self.hum_plot.setData(self.hum_time, self.hum_data['HUM'])
 
-        if self.filename:
+        if self.Humfilename:
             self.HumLogData(timestamp, HUM, TMP, DEW)
             
     def HumLogData(self, timestamp, HUM, TMP, DEW):
