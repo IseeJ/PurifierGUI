@@ -128,13 +128,6 @@ class Ui_MainWindow(object):
         self.Humlabel3.setFixedSize(100, 40)
         self.HumVLayout_2_1.addWidget(self.Humlabel3)
 
-        self.Humlabel4 = QtWidgets.QLabel(self.centralwidget)
-        self.Humlabel4.setObjectName("Humlabel4")
-        self.Humlabel4.setText(f"AH: --")
-        self.Humlabel4.setStyleSheet(f"font-weight: bold; font-size: 14px; color: magenta ; background-color: white; border: 1px solid black;")
-        self.Humlabel4.setFixedSize(100, 40)
-        self.HumVLayout_2_1.addWidget(self.Humlabel4)
-
         self.HumclearButton = QtWidgets.QPushButton(self.centralwidget)
         self.HumclearButton.setMaximumSize(QtCore.QSize(60, 16777215))
         self.HumclearButton.setObjectName("HumclearButton")
