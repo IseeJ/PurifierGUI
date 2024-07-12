@@ -596,7 +596,7 @@ class MainWindow(QMainWindow):
             print(f"Error writing to file: {e}")
 
     @pyqtSlot(str, float, float, float, float)
-    def updateHum(self, timestamp, HUM, TMP, DEW):
+    def updateHum(self, timestamp, HUM, TMP, DEW, absHUM):
         print(f"{timestamp}, RH: {HUM}, TMP: {TMP}, DEW: {DEW}, AH: {absHUM}")
         self.ui.Humlabel1.setText(f"RH: {HUM:.2f}")
         self.ui.Humlabel2.setText(f"Tmp: {TMP:.2f}")
