@@ -29,7 +29,8 @@ class DateAxisItem(AxisItem):
         return [dt.datetime.fromtimestamp(value).strftime("%H:%M:%S\n%Y-%m-%d\n\n") for value in values]
 
 class Hum_Worker(QThread):
-    result = pyqtSignal(str, float, float, float)
+    #add abshum conversion now 4 floats emit
+    result = pyqtSignal(str, float, float, float, float)
     def __init__(self, port, interval, baud):
         super().__init__()
         self.ser2 = None
@@ -67,7 +68,9 @@ class Hum_Worker(QThread):
                         HUM = float(parts[0].strip())
                         TMP = float(parts[1].strip())
                         DEW = float(parts[3].strip())
-                        self.latest_reading = (HUM, TMP, DEW)
+                        #add abshum conversion
+                        absHUM = (6.112*np.exp((17.67*TMP)/(TMP+243.5))*HUM*2.1674)/(273.15+TMP)
+                        self.latest_reading = (HUM, TMP, DEW, absHUM)
                     if not self.sensor_string[0].isdigit():
                         print(timestamp, self.sensor_string)
 
@@ -79,7 +82,7 @@ class Hum_Worker(QThread):
                     if self.latest_reading:
                         self.result.emit(timestamp, *self.latest_reading)
                     else:
-                        self.result.emit(timestamp, np.nan, np.nan, np.nan)
+                        self.result.emit(timestamp, np.nan, np.nan, np.nan, np.nan)
                     self.last_emit_time = now_time
 
         except serial.SerialException as e:
@@ -274,9 +277,9 @@ class HumidityModel(QObject):
 
     def lenData(self, parent=QModelIndex()):
         return len(self.data)
-
-    def appendData(self, time, hum, tmp, dew):
-        self.data.append((time, hum, tmp, dew))
+    #add abshum
+    def appendData(self, time, hum, tmp, dew, abshum):
+        self.data.append((time, hum, tmp, dew, abshum))
         self.dataChanged.emit()
 
     def clearData(self):
@@ -379,7 +382,7 @@ class MainWindow(QMainWindow):
         self.ui.HumPlotWidget.showGrid(x=True, y=True, alpha=0.4)
 
         self.hum_time = []
-        self.hum_data = {'HUM': [], 'TMP': [], 'DEW': []}
+        self.hum_data = {'HUM': [], 'TMP': [], 'DEW': [], 'absHUM': []}
         self.hum_plotLines = {}
         self.hum_plotLines['HUM'] = self.ui.HumPlotWidget.plot(self.hum_time, self.hum_data['HUM'], pen=pg.mkPen(color=(190, 17, 17), width=2), name='HUM')
         self.hum_plotLines['TMP'] = self.ui.HumPlotWidget.plot(self.hum_time, self.hum_data['TMP'], pen=pg.mkPen(color=(0, 184, 245), width=2), name='TMP')
@@ -403,7 +406,9 @@ class MainWindow(QMainWindow):
 
         self.ui.HumPlotWidget2.setLabel("left", "Relative Humidity (%)", **{"color": "blue", "font-size": "18px"})
         #self.hum_plot = self.ui.HumPlotWidget2.plot([], [], pen=pg.mkPen(color='b', width=2), name="HUM")
-        self.hum_plot = self.ui.HumPlotWidget2.plot(self.hum_time, self.hum_data['HUM'], pen=pg.mkPen(color='b', width=2), name="HUM")
+        #self.hum_plot = self.ui.HumPlotWidget2.plot(self.hum_time, self.hum_data['absHUM'], pen=pg.mkPen(color='b', width=2), name="HUM")
+        #plot absHUM instead of HUM (relative hum)
+        self.hum_plot = self.ui.HumPlotWidget2.plot(self.hum_time, self.hum_data['absHUM'], pen=pg.mkPen(color='b', width=2), name="absHUM")
         self.ui.HumPlotWidget2.setLabel("right", "Output Temperature (°C)", **{"color": "red", "font-size": "18px"})
         #self.temp_plot = pg.PlotDataItem(self.time, self.data[i], pen=pg.mkPen(color='r', width=2), name="T8")
         self.temp_plot = pg.PlotDataItem(self.time, self.data[7], pen=pg.mkPen(color='r', width=2), name="T8")
@@ -504,11 +509,11 @@ class MainWindow(QMainWindow):
         
     def HumclearPlot(self):
         self.hum_time = []
-        self.hum_data = {'HUM': [], 'TMP': [], 'DEW': []}
+        self.hum_data = {'HUM': [], 'TMP': [], 'DEW': [], 'absHUM': []}
         self.hum_plotLines['HUM'].setData(self.hum_time, self.hum_data['HUM'])
         self.hum_plotLines['TMP'].setData(self.hum_time, self.hum_data['TMP'])
         self.hum_plotLines['DEW'].setData(self.hum_time, self.hum_data['DEW'])
-        self.hum_plot.setData(self.hum_time,self.hum_data['HUM'])
+        self.hum_plot.setData(self.hum_time,self.hum_data['absHUM'])
 
     #Logging
     def TempstartLogging(self):
@@ -590,33 +595,35 @@ class MainWindow(QMainWindow):
         except Exception as e:
             print(f"Error writing to file: {e}")
 
-    @pyqtSlot(str, float, float, float)
+    @pyqtSlot(str, float, float, float, float)
     def updateHum(self, timestamp, HUM, TMP, DEW):
-        print(f"{timestamp}, HUM: {HUM}, TMP: {TMP}, DEW: {DEW}")
-        self.ui.Humlabel1.setText(f"Hum: {HUM:.2f}")
+        print(f"{timestamp}, RH: {HUM}, TMP: {TMP}, DEW: {DEW}, AH: {absHUM}")
+        self.ui.Humlabel1.setText(f"RH: {HUM:.2f}")
         self.ui.Humlabel2.setText(f"Tmp: {TMP:.2f}")
         self.ui.Humlabel3.setText(f"Dew: {DEW:.2f}")
+        self.ui.Humlabel4.setText(f"AH: {absHUM:.2f}")
         formattime = dt.datetime.strptime(timestamp, '%Y%m%dT%H%M%S.%f').timestamp()
 
-        self.humidity_model.appendData(timestamp, HUM, TMP, DEW)
+        self.humidity_model.appendData(timestamp, HUM, TMP, DEW, absHUM)
         self.hum_time.append(formattime)
         self.hum_data['HUM'].append(HUM)
         self.hum_data['TMP'].append(TMP)
         self.hum_data['DEW'].append(DEW)
+        self.hum_data['absHUM'].append(absHUM)
 
         self.hum_plotLines['HUM'].setData(self.hum_time, self.hum_data['HUM'])
         self.hum_plotLines['TMP'].setData(self.hum_time, self.hum_data['TMP'])
         self.hum_plotLines['DEW'].setData(self.hum_time, self.hum_data['DEW'])
-        self.hum_plot.setData(self.hum_time, self.hum_data['HUM'])
+        self.hum_plot.setData(self.hum_time, self.hum_data['absHUM'])
 
         if self.Humfilename:
-            self.HumLogData(timestamp, HUM, TMP, DEW)
+            self.HumLogData(timestamp, HUM, TMP, DEW, absHUM)
             
-    def HumLogData(self, timestamp, HUM, TMP, DEW):
+    def HumLogData(self, timestamp, HUM, TMP, DEW, absHUM):
         try:
             with open(f"{self.HumsaveDirectory}/{self.Humfilename}", 'a', newline='') as file:
                 writer = csv.writer(file)
-                writer.writerow([timestamp, HUM,TMP,DEW])
+                writer.writerow([timestamp, HUM,TMP,DEW, absHUM])
                 file.flush()
         except Exception as e:
             print(f"Error writing to file: {e}")
