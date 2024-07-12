@@ -601,7 +601,7 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot(str, float, float, float, float)
     def updateHum(self, timestamp, HUM, TMP, DEW, absHUM):
-        print(f"{timestamp}, RH: {HUM}, TMP: {TMP}, DEW: {DEW}, AH: {absHUM.2f}")
+        print(f"{timestamp}, RH: {HUM}, TMP: {TMP}, DEW: {DEW}, AH: {absHUM:.2f}")
         self.ui.Humlabel1.setText(f"RH: {HUM:.2f}")
         self.ui.Humlabel2.setText(f"Tmp: {TMP:.2f}")
         self.ui.Humlabel3.setText(f"Dew: {DEW:.2f}")
