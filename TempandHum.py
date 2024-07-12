@@ -354,7 +354,7 @@ class MainWindow(QMainWindow):
         try:
             with open(f"{self.HumsaveDirectory}/{self.Humfilename}", 'w', newline='') as file:
                 writer = csv.writer(file)
-                writer.writerow(['Time', 'HUM', 'TMP', 'DEW'])
+                writer.writerow(['Time', 'HUM', 'TMP', 'DEW', 'absHUM'])
         except Exception as e:
             print(f"Error opening file: {e}")
 
@@ -455,12 +455,16 @@ class MainWindow(QMainWindow):
 
         self.serialPort2 = self.ui.HumPortBox.currentText()
         self.baud2 = int(self.ui.HumBaudBox.currentText())
-        """
+
         if 'COM' not in self.serialPort:
             self.serialPort = "/dev/" + self.ui.TempPortBox.currentText()
-        """
+        if 'COM' not in self.serialPort2:
+            self.serialPort2 = "/dev/" + self.ui.HumPortBox.currentText()
+            
         print(f"Connected to Tmp: {self.serialPort}")
-        print(f"Set Tmp baud rate to: {self.baud}")
+        #print(f"Set Tmp baud rate to: {self.baud}")
+        print(f"Connected to Hum: {self.serialPort2}")
+        #print(f"Set Hum baud rate to: {self.baud2}")
         
         
         if self.serialPort is None:
