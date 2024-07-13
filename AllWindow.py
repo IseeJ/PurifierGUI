@@ -142,14 +142,18 @@ class Ui_MainWindow(object):
         self.HumVLayout_2_1.addWidget(self.HumclearButton)
         
 
-        
+        self.graphics_layout = GraphicsLayoutWidget(self.centralwidget)
+        self.graphics_layout.setMinimumSize(QtCore.QSize(400,300))
+        self.HumHLayout_2.addWidget(self.graphics_layout)
+
+        """
         self.HumPlotWidget = PlotWidget(self.centralwidget)
         self.HumPlotWidget.setMinimumSize(QtCore.QSize(348,305))
         self.HumPlotWidget.setObjectName("HumPlotWidget")
         self.HumHLayout_2.addWidget(self.HumPlotWidget)
-        
+        """
         self.HumPlotWidget2 = PlotWidget(self.centralwidget)
-        self.HumPlotWidget2.setMinimumSize(QtCore.QSize(200,0))
+        self.HumPlotWidget2.setMinimumSize(QtCore.QSize(400,300))
         self.HumPlotWidget2.setObjectName("HumPlotWidget2")
         self.HumHLayout_2.addWidget(self.HumPlotWidget2)
         
