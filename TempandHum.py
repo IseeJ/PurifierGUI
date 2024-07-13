@@ -359,6 +359,7 @@ class MainWindow(QMainWindow):
             print(f"Error opening file: {e}")
 
     def initGraph(self):
+        #PLOT1
         self.ui.graphWidget.setBackground("w")
         styles = {"color": "black", "font-size": "18px"}
         self.ui.graphWidget.setLabel("left", "Temperature (°C)", **styles)
@@ -374,23 +375,50 @@ class MainWindow(QMainWindow):
             plot_line = self.ui.graphWidget.plot(self.time, self.data[i], pen=pg.mkPen(color=self.colors[i], width=2))
             self.plotLines.append(plot_line)
 
+
+        #PLOT 2
+        """
         self.ui.HumPlotWidget.setBackground("w")
         self.ui.HumPlotWidget.setLabel("left", "Value", **styles)
         self.ui.HumPlotWidget.setLabel("bottom", "Time", **styles)
         self.ui.HumPlotWidget.getAxis('bottom').setStyle(tickTextOffset=10)
         self.ui.HumPlotWidget.setAxisItems({'bottom': DateAxisItem(orientation='bottom')})
         self.ui.HumPlotWidget.showGrid(x=True, y=True, alpha=0.4)
-
         self.hum_time = []
         self.hum_data = {'HUM': [], 'TMP': [], 'DEW': [], 'absHUM': []}
         self.hum_plotLines = {}
         self.hum_plotLines['HUM'] = self.ui.HumPlotWidget.plot(self.hum_time, self.hum_data['HUM'], pen=pg.mkPen(color=(190, 17, 17), width=2), name='HUM')
         self.hum_plotLines['TMP'] = self.ui.HumPlotWidget.plot(self.hum_time, self.hum_data['TMP'], pen=pg.mkPen(color=(0, 184, 245), width=2), name='TMP')
         self.hum_plotLines['DEW'] = self.ui.HumPlotWidget.plot(self.hum_time, self.hum_data['DEW'], pen=pg.mkPen(color=(0,0,0), width=2), name='DEW')
+        """
 
+        self.ui.graphics_layout.setBackground("w")
+        self.hum_plot = self.ui.graphics_layout.addPlot(row=0, col=0)
+        self.tmp_plot = self.ui.graphics_layout.addPlot(row=1, col=0)
+        self.dew_plot = self.ui.graphics_layout.addPlot(row=2, col=0)
+
+
+        self.hum_plot.setLabel('left', text='<span style="color: #be1111;">RH(%)</span>')
+        self.tmp_plot.setLabel('left', text='<span style="color: #00b8f5;">TMP(°C)</span>')
+        self.dew_plot.setLabel('left',text='<span style="color: #000000;">DEW(°C)</span>')
+
+
+        self.dew_plot.setLabel('bottom', 'Time', **styles)
+        self.hum_plot.getAxis('bottom').setStyle(tickTextOffset=10)
+        self.tmp_plot.getAxis('bottom').setStyle(tickTextOffset=10)
+        self.dew_plot.getAxis('bottom').setStyle(tickTextOffset=10)
+
+        self.dew_plot.setAxisItems({'bottom': DateAxisItem(orientation='bottom')})
+
+        self.hum_time = []
+        self.hum_data = {'HUM': [], 'TMP': [], 'DEW': [], 'absHUM': []}
+        self.hum_plotLines = {}
+        self.hum_plotLines['HUM'] = self.hum_plot.plot(self.hum_time, self.hum_data['HUM'], pen=pg.mkPen(color=(190, 17, 17), width=2), name='HUM')
+        self.hum_plotLines['TMP'] = self.tmp_plot.plot(self.hum_time, self.hum_data['TMP'], pen=pg.mkPen(color=(0, 184, 245), width=2), name='TMP')
+        self.hum_plotLines['DEW'] = self.dew_plot.plot(self.hum_time, self.hum_data['DEW'], pen=pg.mkPen(color=(0,0,0), width=2), name='DEW')
     
-        #compare hum and T out
-        #*self.HumPlotWidget2 = PlotWidget(self.centralwidget)
+
+        #PLOT 3
         self.ui.HumPlotWidget2.setBackground("w")
         self.temp_viewbox = pg.ViewBox()
         self.ui.HumPlotWidget2.plotItem.showAxis('right')
@@ -405,29 +433,10 @@ class MainWindow(QMainWindow):
         self.ui.HumPlotWidget2.setAxisItems({'bottom': DateAxisItem(orientation='bottom')})
 
         self.ui.HumPlotWidget2.setLabel("left", "Absolute Humidity (ppm)", **{"color": "blue", "font-size": "18px"})
-        #self.hum_plot = self.ui.HumPlotWidget2.plot([], [], pen=pg.mkPen(color='b', width=2), name="HUM")
-        #self.hum_plot = self.ui.HumPlotWidget2.plot(self.hum_time, self.hum_data['absHUM'], pen=pg.mkPen(color='b', width=2), name="HUM")
-        #plot absHUM instead of HUM (relative hum)
         self.hum_plot = self.ui.HumPlotWidget2.plot(self.hum_time, self.hum_data['absHUM'], pen=pg.mkPen(color='b', width=2), name="absHUM")
         self.ui.HumPlotWidget2.setLabel("right", "Output Temperature (°C)", **{"color": "red", "font-size": "18px"})
-        #self.temp_plot = pg.PlotDataItem(self.time, self.data[i], pen=pg.mkPen(color='r', width=2), name="T8")
         self.temp_plot = pg.PlotDataItem(self.time, self.data[7], pen=pg.mkPen(color='r', width=2), name="T8")
         self.temp_viewbox.addItem(self.temp_plot)
-
-    """
-    ## Handle view resizing 
-    #to make sure the plot is in plot area, not outside
-    def updateViews():
-    ## view has resized; update auxiliary views to match
-        global p1, p2, p3
-        p2.setGeometry(p1.vb.sceneBoundingRect())
-        p3.setGeometry(p1.vb.sceneBoundingRect())
-        ## need to re-update linked axes since this was called
-        ## incorrectly while views had different shapes.
-        ## (probably this should be handled in ViewBox.resizeEvent)
-        p2.linkedViewChanged(p1.vb, p2.XAxis)
-        p3.linkedViewChanged(p1.vb, p3.XAxis)
-    """
     
     def updateViews(self):
         self.temp_viewbox.setGeometry(self.ui.HumPlotWidget2.getPlotItem().getViewBox().sceneBoundingRect())
