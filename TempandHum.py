@@ -432,7 +432,7 @@ class MainWindow(QMainWindow):
         self.ui.HumPlotWidget2.getAxis('bottom').setStyle(tickTextOffset=10)
         self.ui.HumPlotWidget2.setAxisItems({'bottom': DateAxisItem(orientation='bottom')})
 
-        self.ui.HumPlotWidget2.setLabel("left", "Absolute Humidity (ppm)", **{"color": "blue", "font-size": "18px"})
+        self.ui.HumPlotWidget2.setLabel("left", "Absolute Humidity (g/m3)", **{"color": "blue", "font-size": "18px"})
         self.hum_plot = self.ui.HumPlotWidget2.plot(self.hum_time, self.hum_data['absHUM'], pen=pg.mkPen(color='b', width=2), name="absHUM")
         self.ui.HumPlotWidget2.setLabel("right", "Output Temperature (°C)", **{"color": "red", "font-size": "18px"})
         self.temp_plot = pg.PlotDataItem(self.time, self.data[7], pen=pg.mkPen(color='r', width=2), name="T8")
