@@ -11,7 +11,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, pyqtSlot, QModelIndex, QObject, QPoint
 from PyQt5.QtGui import QPixmap, QPainter, QColor, QFont, QImage, QIcon
-from pyqtgraph import PlotWidget
+from pyqtgraph import PlotWidget, GraphicsLayoutWidget
 from PyQt5.QtWidgets import*
 
 class Ui_MainWindow(object):
