@@ -34,7 +34,7 @@ class TimeAxisItem(AxisItem):
         self.setLabel('Time')
 
     def tickStrings(self, values, scale, spacing):
-        return [datetime.datetime.fromtimestamp(value).strftime('%H:%M:%S') for value in values]
+        return [dt.datetime.fromtimestamp(value).strftime('%H:%M:%S') for value in values]
 
 
 
