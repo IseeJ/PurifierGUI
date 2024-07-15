@@ -30,8 +30,7 @@ class DateAxisItem(AxisItem):
 
 class TimeAxisItem(AxisItem):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.setLabel('Time')
+        AxisItem.__init__(self, *args, **kwargs)
 
     def tickStrings(self, values, scale, spacing):
         return [dt.datetime.fromtimestamp(value).strftime('%H:%M:%S') for value in values]
