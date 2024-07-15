@@ -28,6 +28,16 @@ class DateAxisItem(AxisItem):
     def tickStrings(self, values, scale, spacing):
         return [dt.datetime.fromtimestamp(value).strftime("%H:%M:%S\n%Y-%m-%d\n\n") for value in values]
 
+class TimeAxisItem(AxisItem):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setLabel('Time')
+
+    def tickStrings(self, values, scale, spacing):
+        return [datetime.datetime.fromtimestamp(value).strftime('%H:%M:%S') for value in values]
+
+
+
 class Hum_Worker(QThread):
     #add abshum conversion now 4 floats emit
     result = pyqtSignal(str, float, float, float, float)
@@ -408,6 +418,8 @@ class MainWindow(QMainWindow):
         self.tmp_plot.getAxis('bottom').setStyle(tickTextOffset=10)
         self.dew_plot.getAxis('bottom').setStyle(tickTextOffset=10)
 
+        self.hum_plot.setAxisItems({'bottom': TimeAxisItem(orientation='bottom')})
+        self.tmp_plot.setAxisItems({'bottom': TimeAxisItem(orientation='bottom')})
         self.dew_plot.setAxisItems({'bottom': DateAxisItem(orientation='bottom')})
 
         self.hum_time = []
