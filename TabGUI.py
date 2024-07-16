@@ -221,7 +221,7 @@ class Pressure_Worker(QThread):
                 if now_time - self.last_emit_time >= dt.timedelta(seconds=self.interval):
                     if self.latest_reading:
                         self.result.emit(timestamp, self.latest_reading)
-                        print(timestamp, self.latest_reading)
+                        #print(timestamp, self.latest_reading)
                     else:
                         self.result.emit(timestamp, np.nan)
                     self.last_emit_time = now_time
@@ -270,33 +270,34 @@ def parse_temp(self, response):
         temperatures.append(hex_dec(self,hex_str))
     return tuple(temperatures)
 
-"""
+
 #to store pressure data
 class PressureModel(QObject):
     dataChanged = pyqtSignal()
 
     def __init__(self, parent=None):
         super(PressureModel, self).__init__(parent)
-        self.data = []
-
+        self.Press_time = []
+        self.Press_data = []
     def lenData(self, parent=QModelIndex()):
-        return len(self.data)
+        return len(self.Press_data)
         
     def appendData(self, time, pres):
-        self.data.append((time, pres))
+        self.Press_time.append(time)
+        self.Press_data.append(pres)
         self.dataChanged.emit()
 
     def clearData(self):
-        self.data = []
+        self.Press_time = []
+        self.Press_data = []
         self.dataChanged.emit()
 
-    def data(self, index, role=Qt.DisplayRole):
-        if role == Qt.DisplayRole:
-            row = index.row()
-            return self.data[row]
-
+    def getData(self):
+        return self.Press_time, self.Press_data
+        
     def reset(self):
-        self.data = []
+        self.Press_time = []
+        self.Press_data = []
         return None
 
 
@@ -356,7 +357,7 @@ class HumidityModel(QObject):
     def reset(self):
         self.data = []
         return None
-"""
+
 
 
 
@@ -379,6 +380,7 @@ class MainWindow(QMainWindow):
         
         self.ui.clearButton.pressed.connect(self.clearPlot)
         self.ui.HumclearButton.pressed.connect(self.HumclearPlot)
+        self.ui.PressclearButton.pressed.connect(self.PresclearPlot)
         
         self.ui.TempLogButton.pressed.connect(self.TempstartLogging)
         self.ui.HumLogButton.pressed.connect(self.HumstartLogging)
@@ -387,7 +389,7 @@ class MainWindow(QMainWindow):
         self.ui.LogBothButton.setCheckable(True)
         self.ui.LogBothButton.clicked.connect(self.BothstartLogging)
 
-        
+        self.ui.refreshButton_2.pressed.connect(self.refreshSerialPorts)
         self.ui.refreshButton.pressed.connect(self.refreshSerialPorts)
         self.ui.saveDirectoryButton.pressed.connect(self.chooseSaveDirectory)
         self.ui.HumsaveDirectoryButton.pressed.connect(self.chooseHumSaveDirectory)
@@ -396,7 +398,7 @@ class MainWindow(QMainWindow):
 
         #self.temperature_model = TemperatureModel()
         #self.humidity_model = HumidityModel()
-        #self.pressure_model = PressureModel()
+        self.pressure_model = PressureModel()
      
         self.initGraph()
         self.filename = None
@@ -516,9 +518,9 @@ class MainWindow(QMainWindow):
         self.ui.PressPlotWidget.setAxisItems({'bottom': DateAxisItem(orientation='bottom')})
         self.ui.PressPlotWidget.showGrid(x=True, y=True, alpha=0.4)
 
-        self.Presstime = []
-        self.Pressdata = []
-        self.PressPlot = self.ui.PressPlotWidget.plot(self.Presstime, self.Pressdata, pen=pg.mkPen(color='blue', width=2))
+        #self.Presstime = []
+        #self.Pressdata = []
+        self.PressPlot = self.ui.PressPlotWidget.plot([],[], pen=pg.mkPen(color='blue', width=2))
     
     def updateViews(self):
         self.temp_viewbox.setGeometry(self.ui.HumPlotWidget2.getPlotItem().getViewBox().sceneBoundingRect())
@@ -621,6 +623,9 @@ class MainWindow(QMainWindow):
         self.hum_plotLines['TMP'].setData(self.hum_time, self.hum_data['TMP'])
         self.hum_plotLines['DEW'].setData(self.hum_time, self.hum_data['DEW'])
         self.hum_plot.setData(self.hum_time,self.hum_data['absHUM'])
+
+    def PresclearPlot(self):
+        self.pressure_model.clearData()
 
     #Logging
     def TempstartLogging(self):
@@ -733,6 +738,20 @@ class MainWindow(QMainWindow):
         self.hum_plotLines['DEW'].setData(self.hum_time, self.hum_data['DEW'])
         self.hum_plot.setData(self.hum_time, self.hum_data['absHUM'])
 
+        
+        """
+        self.hum_time.append(formattime)
+        self.hum_data['HUM'].append(HUM)
+        self.hum_data['TMP'].append(TMP)
+        self.hum_data['DEW'].append(DEW)
+        self.hum_data['absHUM'].append(absHUM)
+
+        self.hum_plotLines['HUM'].setData(self.hum_time, self.hum_data['HUM'])
+        self.hum_plotLines['TMP'].setData(self.hum_time, self.hum_data['TMP'])
+        self.hum_plotLines['DEW'].setData(self.hum_time, self.hum_data['DEW'])
+        self.hum_plot.setData(self.hum_time, self.hum_data['absHUM'])
+        """
+        
         if self.Humfilename:
             self.HumLogData(timestamp, HUM, TMP, DEW, absHUM)
     def HumLogData(self, timestamp, HUM, TMP, DEW, absHUM):
@@ -755,13 +774,16 @@ class MainWindow(QMainWindow):
         formattime = dt.datetime.strptime(timestamp, '%Y%m%dT%H%M%S.%f').timestamp()
         print(f"{timestamp}: {Pressure}")
         #model?? seems like I've not been using model
-        #self.pressure_model.appendData(formattime, Pressure)
-        self.Presstime.append(formattime)
-        self.Pressdata.append(Pressure)
-        self.PressPlot.setData(self.Presstime, self.Pressdata)
-        #Presstime = self.pressure_model.data(self, 0)
-        #Pressdata = self.pressure_model.data(self, 1)
-        #self.PressPlot.setData(Presstime, Pressdata)
+        #self.Presstime.append(formattime)
+        #self.Pressdata.append(Pressure)
+        #self.PressPlot.setData(self.Presstime, self.Pressdata)
+
+        #append data to model instead of storing in a list in mainwindow
+        self.pressure_model.appendData(formattime, Pressure)
+        #get data from model
+        Press_time, Press_data = self.pressure_model.getData()
+        self.PressPlot.setData(Press_time, Press_data)
+
         if self.Pressfilename:
             self.PressLogData(timestamp, Pressure)
             

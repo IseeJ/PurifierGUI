@@ -281,6 +281,12 @@ class Ui_MainWindow(object):
         self.Presslabel.setFixedSize(200, 30)
         self.mainsetup_2.addWidget(self.Presslabel)
 
+        self.PressclearButton = QtWidgets.QPushButton(self.tab2)
+        self.PressclearButton.setObjectName("PressclearButton")
+        self.PressclearButton.setText("Clear Plot")
+        self.PressclearButton.setMinimumSize(QtCore.QSize(200, 16777215)) 
+        self.mainsetup_2.addWidget(self.PressclearButton)
+
         self.PressPortBox = QtWidgets.QComboBox(self.tab2)
         self.PressPortBox.setObjectName("PressPortBox")
         self.mainsetup_2.addWidget(self.PressPortBox)
