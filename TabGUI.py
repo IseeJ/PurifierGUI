@@ -270,7 +270,7 @@ def parse_temp(self, response):
         temperatures.append(hex_dec(self,hex_str))
     return tuple(temperatures)
 
-
+"""
 #to store pressure data
 class PressureModel(QObject):
     dataChanged = pyqtSignal()
@@ -356,7 +356,7 @@ class HumidityModel(QObject):
     def reset(self):
         self.data = []
         return None
-
+"""
 
 
 
@@ -394,9 +394,9 @@ class MainWindow(QMainWindow):
         self.ui.PresssaveDirectoryButton.pressed.connect(self.choosePressSaveDirectory)
 
 
-        self.temperature_model = TemperatureModel()
-        self.humidity_model = HumidityModel()
-        self.pressure_model = PressureModel()
+        #self.temperature_model = TemperatureModel()
+        #self.humidity_model = HumidityModel()
+        #self.pressure_model = PressureModel()
      
         self.initGraph()
         self.filename = None
@@ -690,7 +690,7 @@ class MainWindow(QMainWindow):
                 self.ui.labels[i].setText(f"T{i + 1}: err")
 
         active_ch = tuple(temperatures[i] if self.ui.checkboxes[i].isChecked() else np.nan for i in range(8))
-        self.temperature_model.appendData(current_time, *active_ch)
+        #self.temperature_model.appendData(current_time, *active_ch)
 
         formattime = dt.datetime.strptime(current_time, '%Y%m%dT%H%M%S.%f').timestamp()
         self.time.append(formattime)
@@ -721,7 +721,7 @@ class MainWindow(QMainWindow):
         self.ui.Humlabel4.setText(f"AH: {absHUM:.2f}")
         formattime = dt.datetime.strptime(timestamp, '%Y%m%dT%H%M%S.%f').timestamp()
 
-        self.humidity_model.appendData(timestamp, HUM, TMP, DEW, absHUM)
+        #self.humidity_model.appendData(timestamp, HUM, TMP, DEW, absHUM)
         self.hum_time.append(formattime)
         self.hum_data['HUM'].append(HUM)
         self.hum_data['TMP'].append(TMP)
@@ -755,11 +755,13 @@ class MainWindow(QMainWindow):
         formattime = dt.datetime.strptime(timestamp, '%Y%m%dT%H%M%S.%f').timestamp()
         print(f"{timestamp}: {Pressure}")
         #model?? seems like I've not been using model
-        self.pressure_model.appendData(timestamp, Pressure)
+        #self.pressure_model.appendData(formattime, Pressure)
         self.Presstime.append(formattime)
         self.Pressdata.append(Pressure)
         self.PressPlot.setData(self.Presstime, self.Pressdata)
-        
+        #Presstime = self.pressure_model.data(self, 0)
+        #Pressdata = self.pressure_model.data(self, 1)
+        #self.PressPlot.setData(Presstime, Pressdata)
         if self.Pressfilename:
             self.PressLogData(timestamp, Pressure)
             
