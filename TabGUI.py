@@ -300,7 +300,7 @@ class PressureModel(QObject):
         self.Press_data = []
         return None
 
-
+"""
 #to store tempdata
 class TemperatureModel(QObject):
     dataChanged = pyqtSignal()
@@ -349,18 +349,11 @@ class HumidityModel(QObject):
         self.data = []
         self.dataChanged.emit()
 
-    def data(self, index, role=Qt.DisplayRole):
-        if role == Qt.DisplayRole:
-            row = index.row()
-            return self.data[row]
-
     def reset(self):
         self.data = []
         return None
 
-
-
-
+"""
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -726,20 +719,8 @@ class MainWindow(QMainWindow):
         self.ui.Humlabel4.setText(f"AH: {absHUM:.2f}")
         formattime = dt.datetime.strptime(timestamp, '%Y%m%dT%H%M%S.%f').timestamp()
 
-        #self.humidity_model.appendData(timestamp, HUM, TMP, DEW, absHUM)
-        self.hum_time.append(formattime)
-        self.hum_data['HUM'].append(HUM)
-        self.hum_data['TMP'].append(TMP)
-        self.hum_data['DEW'].append(DEW)
-        self.hum_data['absHUM'].append(absHUM)
-
-        self.hum_plotLines['HUM'].setData(self.hum_time, self.hum_data['HUM'])
-        self.hum_plotLines['TMP'].setData(self.hum_time, self.hum_data['TMP'])
-        self.hum_plotLines['DEW'].setData(self.hum_time, self.hum_data['DEW'])
-        self.hum_plot.setData(self.hum_time, self.hum_data['absHUM'])
-
+        #self.humidity_model.appendData(formattime, HUM, TMP, DEW, absHUM)
         
-        """
         self.hum_time.append(formattime)
         self.hum_data['HUM'].append(HUM)
         self.hum_data['TMP'].append(TMP)
@@ -750,7 +731,6 @@ class MainWindow(QMainWindow):
         self.hum_plotLines['TMP'].setData(self.hum_time, self.hum_data['TMP'])
         self.hum_plotLines['DEW'].setData(self.hum_time, self.hum_data['DEW'])
         self.hum_plot.setData(self.hum_time, self.hum_data['absHUM'])
-        """
         
         if self.Humfilename:
             self.HumLogData(timestamp, HUM, TMP, DEW, absHUM)
