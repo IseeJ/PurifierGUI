@@ -23,7 +23,7 @@ from PyQt5.QtSerialPort import QSerialPort, QSerialPortInfo
 #https://realpython.com/python-pyqt-qthread/
 #https://www.pythonguis.com/tutorials/multithreading-pyqt-applications-qthreadpool/
 
-#tiemaxes formatting
+#timeaxes formatting
 class DateAxisItem(AxisItem):
     def __init__(self, *args, **kwargs):
         AxisItem.__init__(self, *args, **kwargs)
@@ -38,7 +38,10 @@ class TimeAxisItem(AxisItem):
     def tickStrings(self, values, scale, spacing):
         return [dt.datetime.fromtimestamp(value).strftime('%H:%M:%S') for value in values]
 
-
+#valaxes formatting
+class FmtAxisItem(pg.AxisItem):
+    def tickStrings(self, values, scale, spacing):
+        return [f' {v:.2f}' for v in values]
 
 #Humidity
 class Hum_Worker(QThread):
@@ -54,6 +57,7 @@ class Hum_Worker(QThread):
         self.sensor_string = ""
         self.sensor_string_complete = False
         self.last_emit_time = dt.datetime.now()
+        self.latest_reading = None
 
     #debugging incomplete reading that occurs every 12 readings
     def run(self):
@@ -192,7 +196,7 @@ class Pressure_Worker(QThread):
         self.sensor_string = ""
         self.sensor_string_complete = False
         self.last_emit_time = dt.datetime.now()
-        
+        self.latest_reading = None
     def run(self):
         try:
             self.ser3 = serial.Serial(self.port, self.baud, parity='N', stopbits=1, bytesize=8, timeout=10000)
@@ -211,10 +215,10 @@ class Pressure_Worker(QThread):
                 if self.sensor_string_complete:
                     Pressure = self.sensor_string.strip()
                     self.latest_reading = float(Pressure)
-                   
                     
                     if not self.sensor_string[0].isdigit():
                         print(timestamp, self.sensor_string)
+                    #self.latest_reading = ""
                     self.sensor_string = ""
                     self.sensor_string_complete = False
                     
@@ -300,33 +304,33 @@ class PressureModel(QObject):
         self.Press_data = []
         return None
 
-"""
+
 #to store tempdata
 class TemperatureModel(QObject):
     dataChanged = pyqtSignal()
 
     def __init__(self, parent=None):
         super(TemperatureModel, self).__init__(parent)
-        self.data = []
+        self.time = []
+        self.data = [[] for _ in range(8)]
 
     def lenData(self, parent=QModelIndex()):
-        return len(self.data)
+        return len(self.time)
 
     def appendData(self, time, *temps):
         self.data.append((time,) + temps)
         self.dataChanged.emit()
 
     def clearData(self):
-        self.data = []
+        self.data = [[] for _ in range(8)]
         self.dataChanged.emit()
 
-    def data(self, index, role=Qt.DisplayRole):
-        if role == Qt.DisplayRole:
-            row = index.row()
-            return self.data[row]
+    def getData(self):
+        return self.time, self.data
 
     def reset(self):
-        self.data = []
+        self.time = []
+        self.data = [[] for _ in range(8)]
         return None
 
 
@@ -336,24 +340,46 @@ class HumidityModel(QObject):
 
     def __init__(self, parent=None):
         super(HumidityModel, self).__init__(parent)
-        self.data = []
+        self.HUM_time = []
+        self.RH_val = []
+        self.TMP_val = []
+        self.AH_val = []
+        self.DEW_val = []
 
     def lenData(self, parent=QModelIndex()):
         return len(self.data)
+        
     #add abshum
     def appendData(self, time, hum, tmp, dew, abshum):
-        self.data.append((time, hum, tmp, dew, abshum))
+        self.HUM_time.append(time)
+        self.RH_val.append(hum)
+        self.TMP_val.append(tmp)
+        self.AH_val.append(dew)
+        self.DEW_val.append(abshum)
+        #self.data.append((time, hum, tmp, dew, abshum))
         self.dataChanged.emit()
 
+    def getData(self):
+        return self.HUM_time, self.RH_val,self.TMP_val, self.AH_val,self.DEW_val
+
     def clearData(self):
-        self.data = []
+        self.HUM_time = []
+        self.RH_val = []
+        self.TMP_val = []
+        self.AH_val = []
+        self.DEW_val = []
+        #self.data = []
         self.dataChanged.emit()
 
     def reset(self):
-        self.data = []
+        self.HUM_time = []
+        self.RH_val = []
+        self.TMP_val = []
+        self.AH_val = []
+        self.DEW_val = []
+        #self.data = []
         return None
 
-"""
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -368,8 +394,8 @@ class MainWindow(QMainWindow):
         #self.ui.startStopButton.pressed.connect(self.toggleRun)
         self.ui.startStopButton.setCheckable(True)
         self.ui.startStopButton.clicked.connect(self.toggleRun)
-
-        self.ui.startStopButton_2.clicked.connect(self.startPressure)
+        self.ui.startStopButton_2.setCheckable(True)
+        self.ui.startStopButton_2.clicked.connect(self.togglePressure)
         
         self.ui.clearButton.pressed.connect(self.clearPlot)
         self.ui.HumclearButton.pressed.connect(self.HumclearPlot)
@@ -390,7 +416,7 @@ class MainWindow(QMainWindow):
 
 
         #self.temperature_model = TemperatureModel()
-        #self.humidity_model = HumidityModel()
+        self.humidity_model = HumidityModel()
         self.pressure_model = PressureModel()
      
         self.initGraph()
@@ -455,6 +481,7 @@ class MainWindow(QMainWindow):
             plot_line = self.ui.TempPlotWidget.plot(self.time, self.data[i], pen=pg.mkPen(color=self.colors[i], width=2))
             self.plotLines.append(plot_line)
 
+        
         #PLOT 2 
         #graphic layout for multi-axes plot (HUM, TMP, DEW)
         self.ui.graphics_layout.setBackground("w")
@@ -462,12 +489,9 @@ class MainWindow(QMainWindow):
         self.tmp_plot = self.ui.graphics_layout.addPlot(row=1, col=0)
         self.dew_plot = self.ui.graphics_layout.addPlot(row=2, col=0)
 
-        self.hum_plot.setLabel('left', text='<span style="color: #be1111;">RH(%)</span>')
-        self.tmp_plot.setLabel('left', text='<span style="color: #00b8f5;">TMP(°C)</span>')
-        self.dew_plot.setLabel('left',text='<span style="color: #000000;">DEW(°C)</span>')
-
         self.dew_plot.setLabel('bottom', 'Time', **styles)
         self.hum_plot.getAxis('bottom').setStyle(tickTextOffset=10)
+
         self.tmp_plot.getAxis('bottom').setStyle(tickTextOffset=10)
         self.dew_plot.getAxis('bottom').setStyle(tickTextOffset=10)
 
@@ -475,13 +499,29 @@ class MainWindow(QMainWindow):
         self.tmp_plot.setAxisItems({'bottom': TimeAxisItem(orientation='bottom')})
         self.dew_plot.setAxisItems({'bottom': DateAxisItem(orientation='bottom')})
 
+        self.hum_plot.setAxisItems({'left': FmtAxisItem(orientation='left')})
+        self.tmp_plot.setAxisItems({'left': FmtAxisItem(orientation='left')})
+        self.dew_plot.setAxisItems({'left': FmtAxisItem(orientation='left')})
+
+        self.hum_plot.setLabel('left', text='<span style="color: #be1111;">RH(%)</span>')
+        self.tmp_plot.setLabel('left', text='<span style="color: #00b8f5;">TMP(°C)</span>')
+        self.dew_plot.setLabel('left',text='<span style="color: #000000;">DEW(°C)</span>')
+        
+        """
         self.hum_time = []
         self.hum_data = {'HUM': [], 'TMP': [], 'DEW': [], 'absHUM': []}
         self.hum_plotLines = {}
         self.hum_plotLines['HUM'] = self.hum_plot.plot(self.hum_time, self.hum_data['HUM'], pen=pg.mkPen(color=(190, 17, 17), width=2), name='HUM')
         self.hum_plotLines['TMP'] = self.tmp_plot.plot(self.hum_time, self.hum_data['TMP'], pen=pg.mkPen(color=(0, 184, 245), width=2), name='TMP')
         self.hum_plotLines['DEW'] = self.dew_plot.plot(self.hum_time, self.hum_data['DEW'], pen=pg.mkPen(color=(0,0,0), width=2), name='DEW')
-    
+        """
+        
+        self.hum_plotLines = {}
+        self.hum_plotLines['HUM'] = self.hum_plot.plot([],[], pen=pg.mkPen(color=(190, 17, 17), width=2), name='HUM')
+        self.hum_plotLines['TMP'] = self.tmp_plot.plot([],[], pen=pg.mkPen(color=(0, 184, 245), width=2), name='TMP')
+        self.hum_plotLines['DEW'] = self.dew_plot.plot([],[], pen=pg.mkPen(color=(0,0,0), width=2), name='DEW')
+
+         
 
         #PLOT 3
         self.ui.HumPlotWidget2.setBackground("w")
@@ -498,7 +538,8 @@ class MainWindow(QMainWindow):
         self.ui.HumPlotWidget2.setAxisItems({'bottom': DateAxisItem(orientation='bottom')})
 
         self.ui.HumPlotWidget2.setLabel("left", "Absolute Humidity (g/m3)", **{"color": "blue", "font-size": "18px"})
-        self.hum_plot = self.ui.HumPlotWidget2.plot(self.hum_time, self.hum_data['absHUM'], pen=pg.mkPen(color='b', width=2), name="absHUM")
+        #self.hum_plot = self.ui.HumPlotWidget2.plot(self.hum_time, self.hum_data['absHUM'], pen=pg.mkPen(color='b', width=2), name="absHUM")
+        self.hum_plot = self.ui.HumPlotWidget2.plot([],[], pen=pg.mkPen(color='b', width=2), name="absHUM")
         self.ui.HumPlotWidget2.setLabel("right", "Output Temperature (°C)", **{"color": "red", "font-size": "18px"})
         self.temp_plot = pg.PlotDataItem(self.time, self.data[7], pen=pg.mkPen(color='r', width=2), name="T8")
         self.temp_viewbox.addItem(self.temp_plot)
@@ -536,6 +577,22 @@ class MainWindow(QMainWindow):
             self.startRun()
 
 
+    def togglePressure(self):
+        if self.ui.startStopButton_2.isChecked():
+            self.ui.startStopButton_2.setText("Running")
+            self.ui.startStopButton_2.setStyleSheet("QPushButton {background-color: lightgreen}")
+        else:
+            self.ui.startStopButton_2.setText("Stopped")
+            self.ui.startStopButton_2.setStyleSheet("QPushButton {background-color: lightcoral}")
+            self.ui.PressLogButton.setText("Logging Stopped")
+            self.ui.PressLogButton.setStyleSheet("QPushButton {background-color: lightcoral}")
+            
+        if self.worker3 is not None:
+            self.stopPressure()
+        else:
+            self.startPressure()
+
+    
     def startPressure(self):
         self.serialPort3 = self.ui.PressPortBox.currentText()
         self.interval3 = int(self.ui.intervalInput_2.text())
@@ -546,6 +603,14 @@ class MainWindow(QMainWindow):
         self.worker3 = Pressure_Worker(self.serialPort3, self.interval3, self.baud3)
         self.worker3.result.connect(self.Pressupdate)
         self.worker3.start()
+
+    
+    
+    def stopPressure(self):
+        if self.worker3:
+            self.worker3.stop()
+            self.worker3 = None
+            print("Stopping Serial 3")
         
     def startRun(self):
         self.serialPort = self.ui.TempPortBox.currentText()
@@ -610,13 +675,16 @@ class MainWindow(QMainWindow):
         self.temp_plot.setData(self.time, self.data[7])
         
     def HumclearPlot(self):
+        self.humidity_model.clearData()
+        """
         self.hum_time = []
         self.hum_data = {'HUM': [], 'TMP': [], 'DEW': [], 'absHUM': []}
         self.hum_plotLines['HUM'].setData(self.hum_time, self.hum_data['HUM'])
         self.hum_plotLines['TMP'].setData(self.hum_time, self.hum_data['TMP'])
         self.hum_plotLines['DEW'].setData(self.hum_time, self.hum_data['DEW'])
         self.hum_plot.setData(self.hum_time,self.hum_data['absHUM'])
-
+        """
+        
     def PresclearPlot(self):
         self.pressure_model.clearData()
 
@@ -711,6 +779,7 @@ class MainWindow(QMainWindow):
 
     #HUMIDITY SLOT
     @pyqtSlot(str, float, float, float, float)
+    
     def updateHum(self, timestamp, HUM, TMP, DEW, absHUM):
         print(f"{timestamp}, RH: {HUM}, TMP: {TMP}, DEW: {DEW}, AH: {absHUM:.2f}")
         self.ui.Humlabel1.setText(f"RH: {HUM:.2f}")
@@ -719,8 +788,14 @@ class MainWindow(QMainWindow):
         self.ui.Humlabel4.setText(f"AH: {absHUM:.2f}")
         formattime = dt.datetime.strptime(timestamp, '%Y%m%dT%H%M%S.%f').timestamp()
 
-        #self.humidity_model.appendData(formattime, HUM, TMP, DEW, absHUM)
-        
+        self.humidity_model.appendData(formattime, HUM, TMP, DEW, absHUM)
+        HUM_time, RH_val,TMP_val,AH_val,DEW_val = self.humidity_model.getData()
+        self.hum_plotLines['HUM'].setData(HUM_time, RH_val)
+        self.hum_plotLines['TMP'].setData(HUM_time, TMP_val)
+        self.hum_plotLines['DEW'].setData(HUM_time, DEW_val)
+        self.hum_plot.setData(HUM_time, AH_val)
+
+        """
         self.hum_time.append(formattime)
         self.hum_data['HUM'].append(HUM)
         self.hum_data['TMP'].append(TMP)
@@ -731,7 +806,7 @@ class MainWindow(QMainWindow):
         self.hum_plotLines['TMP'].setData(self.hum_time, self.hum_data['TMP'])
         self.hum_plotLines['DEW'].setData(self.hum_time, self.hum_data['DEW'])
         self.hum_plot.setData(self.hum_time, self.hum_data['absHUM'])
-        
+        """
         if self.Humfilename:
             self.HumLogData(timestamp, HUM, TMP, DEW, absHUM)
     def HumLogData(self, timestamp, HUM, TMP, DEW, absHUM):
