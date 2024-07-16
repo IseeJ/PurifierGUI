@@ -28,12 +28,12 @@ class Ui_MainWindow(object):
         self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
         #self.tabWidget.setGeometry(QtCore.QRect(0, 0, 1500, 900))
         self.tabWidget.setObjectName("tabWidget")
-        self.tabWidget.setMinimumSize(QtCore.QSize(1500,1000)) 
+        self.tabWidget.setMinimumSize(QtCore.QSize(1500,0)) 
         
 
         self.tab1 = QtWidgets.QWidget()
         self.tab1.setObjectName("tab1")
-        self.tab1.setMinimumSize(QtCore.QSize(1500,1000)) 
+        self.tab1.setMinimumSize(QtCore.QSize(1500,0)) 
         
         self.tab2 = QtWidgets.QWidget()
         self.tab2.setObjectName("tab2")
@@ -156,7 +156,7 @@ class Ui_MainWindow(object):
         self.HumHLayout_2.addWidget(self.graphics_layout)
         
         self.HumPlotWidget2 = PlotWidget(self.tab1)
-        self.HumPlotWidget2.setMinimumSize(QtCore.QSize(400,0))
+        self.HumPlotWidget2.setMinimumSize(QtCore.QSize(400,300))
         self.HumPlotWidget2.setObjectName("HumPlotWidget2")
         self.HumHLayout_2.addWidget(self.HumPlotWidget2)
         
@@ -234,7 +234,7 @@ class Ui_MainWindow(object):
 
 
         self.TempPlotWidget = PlotWidget(self.tab1)
-        self.TempPlotWidget.setMinimumSize(QtCore.QSize(1500,305))
+        self.TempPlotWidget.setMinimumSize(QtCore.QSize(1500,560))
         self.TempPlotWidget.setObjectName("TempPlotWidget")
         self.TempHLayout_2.addWidget(self.TempPlotWidget)
 
