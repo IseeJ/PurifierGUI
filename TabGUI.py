@@ -403,6 +403,8 @@ class MainWindow(QMainWindow):
         
         self.ui.TempLogButton.pressed.connect(self.TempstartLogging)
         self.ui.HumLogButton.pressed.connect(self.HumstartLogging)
+
+        self.ui.PressLogButton.setCheckable(True)
         self.ui.PressLogButton.pressed.connect(self.PressstartLogging)
         
         self.ui.LogBothButton.setCheckable(True)
@@ -698,6 +700,13 @@ class MainWindow(QMainWindow):
         self.ui.HumfileLabel.setText(f"{self.HumsaveDirectory}/{self.Humfilename}")
 
     def PressstartLogging(self):
+        if self.ui.PressLogButton.isChecked():
+            self.ui.PressLogButton.setText("Logging")
+            self.ui.PressLogButton.setStyleSheet("QPushButton {background-color: lightgreen}")
+        else:
+            self.ui.PressLogButton.setText("Log Pressure")
+            self.ui.PressLogButton.setStyleSheet("QPushButton {background-color: white}")
+
         self.PressinitFile()
         self.ui.PressfileLabel.setText(f"{self.PresssaveDirectory}/{self.Pressfilename}")
         

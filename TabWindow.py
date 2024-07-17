@@ -28,22 +28,22 @@ class Ui_MainWindow(object):
         self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
         #self.tabWidget.setGeometry(QtCore.QRect(0, 0, 1500, 900))
         self.tabWidget.setObjectName("tabWidget")
-        self.tabWidget.setMinimumSize(QtCore.QSize(1500,0)) 
+        self.tabWidget.setMinimumSize(QtCore.QSize(1000,0)) 
         
-
         self.tab1 = QtWidgets.QWidget()
         self.tab1.setObjectName("tab1")
-        self.tab1.setMinimumSize(QtCore.QSize(1500,0)) 
+        #self.tab1.setMinimumSize(QtCore.QSize(1500,0)) 
+        self.tab1.setMaximumSize(QtCore.QSize(2000,16777215)) 
         
         self.tab2 = QtWidgets.QWidget()
         self.tab2.setObjectName("tab2")
-
+        self.tab2.setMaximumSize(QtCore.QSize(2000,16777215)) 
 
         self.tabWidget.addTab(self.tab1, "Main")
         self.tabWidget.addTab(self.tab2, "Pressure")
 
-        MainWindow.setCentralWidget(self.centralwidget)
-        
+        #MainWindow.setCentralWidget(self.centralwidget)
+        MainWindow.setCentralWidget(self.tabWidget)
         # Vertical layout for tab1
         self.verticalLayout = QtWidgets.QVBoxLayout(self.tab1)
         self.verticalLayout.setObjectName("verticalLayout")
@@ -55,7 +55,7 @@ class Ui_MainWindow(object):
         
         self.refreshButton = QtWidgets.QPushButton(self.tab1)
         self.refreshButton.setObjectName("refreshButton")
-        self.refreshButton.setMinimumSize(QtCore.QSize(200, 16777215)) 
+        #self.refreshButton.setMinimumSize(QtCore.QSize(200, 16777215)) 
         self.refreshButton.setText("Refresh Port")
         self.mainsetup_1.addWidget(self.refreshButton)
 
@@ -68,11 +68,11 @@ class Ui_MainWindow(object):
         self.LogBothButton = QtWidgets.QPushButton(self.tab1)
         self.LogBothButton.setObjectName("LogBothButton")
         self.LogBothButton.setText("Log Both")
-        self.LogBothButton.setMinimumSize(QtCore.QSize(200, 16777215)) 
+        #self.LogBothButton.setMinimumSize(QtCore.QSize(200, 16777215)) 
         self.mainsetup_1.addWidget(self.LogBothButton)
 
         self.startStopButton = QtWidgets.QPushButton(self.tab1)
-        self.startStopButton.setMinimumSize(QtCore.QSize(200, 16777215))
+        #self.startStopButton.setMinimumSize(QtCore.QSize(200, 16777215))
         self.startStopButton.setObjectName("startStopButton")
         self.mainsetup_1.addWidget(self.startStopButton)
 
@@ -146,17 +146,19 @@ class Ui_MainWindow(object):
         self.HumVLayout_2_1.addWidget(self.Humlabel3)
 
         self.HumclearButton = QtWidgets.QPushButton(self.tab1)
-        self.HumclearButton.setMaximumSize(QtCore.QSize(60, 16777215))
+        #self.HumclearButton.setMaximumSize(QtCore.QSize(60, 16777215))
         self.HumclearButton.setObjectName("HumclearButton")
         self.HumclearButton.setText("Clear")
         self.HumVLayout_2_1.addWidget(self.HumclearButton)
         
         self.graphics_layout = GraphicsLayoutWidget(self.centralwidget)
-        self.graphics_layout.setMinimumSize(QtCore.QSize(400,300))
+        self.graphics_layout.setMinimumSize(QtCore.QSize(0,300))
+        #self.graphics_layout.setMaximumSize(QtCore.QSize(750,16777215))
         self.HumHLayout_2.addWidget(self.graphics_layout)
         
         self.HumPlotWidget2 = PlotWidget(self.tab1)
-        self.HumPlotWidget2.setMinimumSize(QtCore.QSize(400,300))
+        self.HumPlotWidget2.setMinimumSize(QtCore.QSize(0,300))
+        #self.HumPlotWidget2.setMaximumSize(QtCore.QSize(750,16777215))
         self.HumPlotWidget2.setObjectName("HumPlotWidget2")
         self.HumHLayout_2.addWidget(self.HumPlotWidget2)
         
@@ -234,7 +236,8 @@ class Ui_MainWindow(object):
 
 
         self.TempPlotWidget = PlotWidget(self.tab1)
-        self.TempPlotWidget.setMinimumSize(QtCore.QSize(1500,560))
+        #self.TempPlotWidget.setMinimumSize(QtCore.QSize(1500,560))
+        #self.TempPlotWidget.setMaximumSize(QtCore.QSize(1500,16777215))
         self.TempPlotWidget.setObjectName("TempPlotWidget")
         self.TempHLayout_2.addWidget(self.TempPlotWidget)
 
@@ -278,13 +281,13 @@ class Ui_MainWindow(object):
         self.Presslabel = QtWidgets.QLabel(self.DiagramWidget)
         self.Presslabel.setText("P: -- psi")
         self.Presslabel.setStyleSheet(f"font-weight: bold; font-size: 14px; color: black; background-color: rgb{(152, 245, 249)}; border: 1px solid black;")
-        self.Presslabel.setFixedSize(200, 30)
+        self.Presslabel.setMinimumSize(140, 30)
         self.mainsetup_2.addWidget(self.Presslabel)
 
         self.PressclearButton = QtWidgets.QPushButton(self.tab2)
         self.PressclearButton.setObjectName("PressclearButton")
         self.PressclearButton.setText("Clear Plot")
-        self.PressclearButton.setMinimumSize(QtCore.QSize(200, 16777215)) 
+        #self.PressclearButton.setMinimumSize(QtCore.QSize(200, 16777215)) 
         self.mainsetup_2.addWidget(self.PressclearButton)
 
         self.PressPortBox = QtWidgets.QComboBox(self.tab2)
@@ -293,7 +296,7 @@ class Ui_MainWindow(object):
 
         self.refreshButton_2 = QtWidgets.QPushButton(self.tab2)
         self.refreshButton_2.setObjectName("refreshButton")
-        self.refreshButton_2.setMinimumSize(QtCore.QSize(200, 16777215)) 
+        #self.refreshButton_2.setMinimumSize(QtCore.QSize(200, 16777215)) 
         self.refreshButton_2.setText("Refresh Port")
         self.mainsetup_2.addWidget(self.refreshButton_2)
 
@@ -307,20 +310,22 @@ class Ui_MainWindow(object):
         self.PresssaveDirectoryButton.setText("File Directory")
         self.mainsetup_2.addWidget(self.PresssaveDirectoryButton)
 
-        self.PressLogButton = QtWidgets.QPushButton(self.tab2)
-        self.PressLogButton.setObjectName("LogBothButton")
-        self.PressLogButton.setText("Log Pressure")
-        self.PressLogButton.setMinimumSize(QtCore.QSize(200, 16777215)) 
-        self.mainsetup_2.addWidget(self.PressLogButton)
-
         self.intervalInput_2 = QtWidgets.QLineEdit(self.tab2)
         self.intervalInput_2.setObjectName("intervalInput")
         self.intervalInput_2.setPlaceholderText("Logging Interval (s)")
         self.intervalInput_2.setMaximumSize(QtCore.QSize(200, 16777215)) 
         self.mainsetup_2.addWidget(self.intervalInput_2)
+        
+        self.PressLogButton = QtWidgets.QPushButton(self.tab2)
+        self.PressLogButton.setObjectName("LogBothButton")
+        self.PressLogButton.setText("Log Pressure")
+        #self.PressLogButton.setMinimumSize(QtCore.QSize(200, 16777215)) 
+        self.mainsetup_2.addWidget(self.PressLogButton)
+
+
 
         self.startStopButton_2 = QtWidgets.QPushButton(self.tab2)
-        self.startStopButton_2.setMinimumSize(QtCore.QSize(200, 16777215))
+        #self.startStopButton_2.setMinimumSize(QtCore.QSize(200, 16777215))
         self.startStopButton_2.setObjectName("startStopButton")
         self.startStopButton_2.setText("Start/Stop")
         self.mainsetup_2.addWidget(self.startStopButton_2)
