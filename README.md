@@ -1,7 +1,5 @@
 # TempGUI
-GUI for temperature and humidity monitoring in LAr purifier
-
-for Omega logger and EZO Atlas sensors
+GUI for temperature and humidity monitoring in LAr purifier (for Omega logger and EZO Atlas sensors)
 
 Updated on 7/18/24: Use the **GUIfinal.py in MostRecentEdit branch**
 
@@ -11,10 +9,8 @@ $cd .\Desktop\TempGUI\GUIfinal\
 $python .\GUIfinal.py
 ```
 
-
-
-1. Press 'Refresh port' to get most recent port names in the drop down box
-2. Choose Baudrate (default for Temp = 38400, Hum = 9600, Pressure = 9600)
+*1. Press 'Refresh port' to get most recent port names in the drop down box
+*2. Choose Baudrate (default for Temp = 38400, Hum = 9600, Pressure = 9600)
 3. Choose logging interval (default is 2 seconds)
 4. Press 'Start/Stop' to start plotting
 
