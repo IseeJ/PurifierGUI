@@ -40,7 +40,12 @@ To ensure the data is being recorded properly, both start logging and start/stop
 
 ## Additional Information ##
 
+### Water vapor content calculation ###
+
+#### RH to AH ####
 Absolute Humidity is calcualted using the measured Relative Humidity and Temperature from the EZO-Hum sensor, using the formula:
 $AH = 2.16 \cdot \frac{RH\cdot6.11 e^{\left ( \frac{17.27 \cdot T}{T+273.15-35.86} \right )}}{T+273.15}$
 
 when RH is Relative Humidity in % and T is Temperature in degree Celsius
+
+
