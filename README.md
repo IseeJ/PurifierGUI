@@ -12,7 +12,7 @@ $cd .\Desktop\TempGUI\GUIfinal\
 $python .\GUIfinal.py
 ```
 
-**Connecting Serial Communications and Logging data**
+## Connecting Serial Communications and Logging data ##
 
 1. Press 'Refresh port' to get most recent port names in the drop down box
 
@@ -34,3 +34,8 @@ To log data:
 To ensure the data is being recorded properly, both start logging and start/stop button must be green as shown in screenshot below
 
 ![Fig1](https://github.com/IseeJ/TempGUI/blob/MostRecentEdit/GUI.png?raw=true)
+
+
+
+
+## Additional Information ##
