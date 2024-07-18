@@ -40,6 +40,14 @@ To ensure the data is being recorded properly, both start logging and start/stop
 
 ## Additional Information ##
 
+### Temperature Logger ###
+#### notes on connection ####
+Power on the device before plugging in otherwise serial port won't be recognized.
+
+#### hexadecimal decoding ####
+Output: 37 Hex bits for 8 channels
+Max temp is 1800, use this to determine when the temperature decoding needed to be swithed to using Two's complement
+
 ### Water vapor concentration ###
 
 #### RH to AH ####
