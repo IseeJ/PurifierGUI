@@ -4,10 +4,15 @@ GUI for temperature and humidity monitoring in LAr purifier (for Omega logger an
 Updated on 7/18/24: Use the **GUIfinal.py in MostRecentEdit branch**
 
 On the PC:
+
+Open powershell from Anaconda navigator
+
 ```
 $cd .\Desktop\TempGUI\GUIfinal\
 $python .\GUIfinal.py
 ```
+
+** Connecting Serial Communications and Logging data**
 
 1. Press 'Refresh port' to get most recent port names in the drop down box
 
