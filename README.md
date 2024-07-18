@@ -12,7 +12,7 @@ $cd .\Desktop\TempGUI\GUIfinal\
 $python .\GUIfinal.py
 ```
 
-** Connecting Serial Communications and Logging data**
+**Connecting Serial Communications and Logging data**
 
 1. Press 'Refresh port' to get most recent port names in the drop down box
 
