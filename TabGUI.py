@@ -475,20 +475,12 @@ class MainWindow(QMainWindow):
         self.ui.TempPlotWidget.getAxis('bottom').setStyle(tickTextOffset=10)
         self.ui.TempPlotWidget.setAxisItems({'bottom': DateAxisItem(orientation='bottom')})
         self.ui.TempPlotWidget.showGrid(x=True, y=True, alpha=0.4)
-
-        """
         self.time = []
         self.data = [[] for _ in range(8)]
-        """
         self.plotLines = []
         self.colors = [(183, 101, 224), (93, 131, 212), (49, 205, 222), (36, 214, 75), (214, 125, 36), (230, 78, 192), (209, 84, 65), (0, 184, 245)]
-        """
         for i in range(8):
             plot_line = self.ui.TempPlotWidget.plot(self.time, self.data[i], pen=pg.mkPen(color=self.colors[i], width=2))
-            self.plotLines.append(plot_line)
-        """
-        for i in range(8):
-            plot_line = self.ui.TempPlotWidget.plot([], [], pen=pg.mkPen(color=self.colors[i], width=2))
             self.plotLines.append(plot_line)
 
         
@@ -771,25 +763,18 @@ class MainWindow(QMainWindow):
                 self.ui.labels[i].setText(f"T{i + 1}: {temperatures[i]:.1f}")
             else:
                 self.ui.labels[i].setText(f"T{i + 1}: err")
-        """
+
         active_ch = tuple(temperatures[i] if self.ui.checkboxes[i].isChecked() else np.nan for i in range(8))
+        #self.temperature_model.appendData(current_time, *active_ch)
+
         formattime = dt.datetime.strptime(current_time, '%Y%m%dT%H%M%S.%f').timestamp()
         self.time.append(formattime)
+
         for i in range(8):
             self.data[i].append(temperatures[i])
             if self.ui.checkboxes[i].isChecked():
                 self.plotLines[i].setData(self.time, self.data[i])
         self.temp_plot.setData(self.time, self.data[7])
-        """
-
-        #using the model
-        self.temperature_model.appendData(formattime, temperatures)
-        Temp_time, Temp_data = self.temperature_model.getData()
-        for i in range(8):
-            if self.ui.checkboxes[i].isChecked():
-                self.plotLines[i].setData(Temp_time, Temp_data[i])
-        self.temp_plot.setData(Temp_time, Temp_data[7])
-        
         if self.filename:
             self.LogData(current_time, temperatures)
     def LogData(self, timestamp, temperatures):
