@@ -24,4 +24,6 @@ To log data:
 
 *for Pressure logging, since the reading is still off, the logging is separated, it has to be configured in its tab.
 
-![alt text](https://github.com/IseeJ/TempGUI/blob/MostRecentEdit/GUI.png?raw=true)
+
+To ensure the data is being recorded properly, both start logging and start/stop button must be green as shown in screenshot below
+![Fig1](https://github.com/IseeJ/TempGUI/blob/MostRecentEdit/GUI.png?raw=true)
