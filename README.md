@@ -26,9 +26,7 @@ To log data:
 
 5. Choose 'File Directory' for both Temp, Hum
 
-6. Press 'Log Both' to start logging data as csv files
-
-*for Pressure logging, since the reading is still off, the logging is separated, it has to be configured in its tab.
+6. Press 'Log All' to start logging data as csv files
 
 
 To ensure the data is being recorded properly, both logging and start/stop button must be green as shown in screenshot below
