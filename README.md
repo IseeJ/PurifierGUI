@@ -11,6 +11,8 @@ Open powershell from Anaconda navigator
 $cd .\Desktop\TempGUI\GUIfinal\
 $python .\GUIfinal.py
 ```
+![Fig0](https://github.com/IseeJ/TempGUI/blob/main/GUI_0.png?raw=true)
+
 
 ## Connecting Serial Communications and Logging data ##
 
