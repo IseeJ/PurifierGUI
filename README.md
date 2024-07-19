@@ -11,8 +11,8 @@ Open powershell from Anaconda navigator
 $cd .\Desktop\TempGUI\GUIfinal\
 $python .\GUIfinal.py
 ```
-![Fig0](https://github.com/IseeJ/TempGUI/blob/main/GUI_0.png?raw=true)
-
+![Fig1](https://github.com/IseeJ/TempGUI/blob/main/Screenshot1.png?raw=true)
+![Fig2](https://github.com/IseeJ/TempGUI/blob/main/Screenshot2.png?raw=true)
 
 ## Connecting Serial Communications and Logging data ##
 
@@ -33,7 +33,7 @@ To log data:
 
 To ensure the data is being recorded properly, both logging and start/stop button must be green as shown in screenshot below
 
-![Fig1](https://github.com/IseeJ/TempGUI/blob/MostRecentEdit/GUI.png?raw=true)
+![Fig3](https://github.com/IseeJ/TempGUI/blob/main/Screenshot3.png?raw=true)
 
 
 
