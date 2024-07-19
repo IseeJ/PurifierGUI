@@ -1,7 +1,7 @@
 # TempGUI
 GUI for temperature and humidity monitoring in LAr purifier (for Temperature logger and EZO Atlas sensors)
 
-Updated on 7/18/24: Use the **GUIfinal.py** with **Tabwindow.py**
+Updated on 7/18/24: Use the **GUIfinal.py** with **TabWindow.py**
 
 On the PC:
 
