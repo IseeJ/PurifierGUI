@@ -14,13 +14,16 @@ from pathlib import Path
 
 import random
 #from mainwindow import Ui_MainWindow
-from AllWindow import Ui_MainWindow
+#from AllWindow import Ui_MainWindow
+from TabWindow import Ui_MainWindow
 from PyQt5.QtSerialPort import QSerialPort, QSerialPortInfo
 
 
 
 #https://realpython.com/python-pyqt-qthread/
 #https://www.pythonguis.com/tutorials/multithreading-pyqt-applications-qthreadpool/
+
+#timeaxes formatting
 class DateAxisItem(AxisItem):
     def __init__(self, *args, **kwargs):
         AxisItem.__init__(self, *args, **kwargs)
@@ -35,8 +38,12 @@ class TimeAxisItem(AxisItem):
     def tickStrings(self, values, scale, spacing):
         return [dt.datetime.fromtimestamp(value).strftime('%H:%M:%S') for value in values]
 
+#valaxes formatting
+class FmtAxisItem(pg.AxisItem):
+    def tickStrings(self, values, scale, spacing):
+        return [f' {v:.2f}' for v in values]
 
-
+#Humidity
 class Hum_Worker(QThread):
     #add abshum conversion now 4 floats emit
     result = pyqtSignal(str, float, float, float, float)
@@ -50,6 +57,7 @@ class Hum_Worker(QThread):
         self.sensor_string = ""
         self.sensor_string_complete = False
         self.last_emit_time = dt.datetime.now()
+        self.latest_reading = None
 
     #debugging incomplete reading that occurs every 12 readings
     def run(self):
@@ -99,50 +107,7 @@ class Hum_Worker(QThread):
         finally:
             if self.ser2:
                 self.ser2.close()
-                
-    """
-    def run(self):
-        try:
-            self.ser2 = serial.Serial(self.port, self.baud, parity='N',stopbits=1,bytesize=8,timeout=10000)
-            #self.ser2 = serial.Serial('COM7', 9600, timeout = 10000)
-            self.ser2.write(b'O,HUM,1\r\n')
-            self.ser2.write(b'O,T,1\r\n')
-            self.ser2.write(b'O,Dew,1\r\n')
-            #time.sleep(0.1)
-            while self.is_running2:
-                now_time = dt.datetime.now()
-                timestamp = str(now_time.strftime('%Y%m%dT%H%M%S.%f')[:-3])  
-                write_time1 = dt.datetime.now()
-                interval_dt = dt.timedelta(seconds = self.interval) 
-                write_time2 = write_time1 + interval_dt
-                while dt.datetime.now() <= write_time2:
-                    pass
-                line = self.ser2.read_until(b'\r').decode('utf-8')
-                #line = self.ser2.read(20).decode('utf-8')
-                print(line)
-                try:
-                    parts = line.split(',')
-                    #fix parsing error when reading is incomplete (index out of range happens once in a while but will pause the process)
-                    if len(parts) == 4:
-                        HUM = float(parts[0].strip())
-                        TMP = float(parts[1].strip())
-                        DEW = float(parts[3].strip())
-                        self.result.emit(timestamp, HUM, TMP, DEW)
-                    #sometimes only hum is printed
-                    #elif len(parts) == 1:
-                    #    HUM = float(parts[0].strip())
-                    #    self.result.emit(timestamp, HUM, np.nan, np.nan)
-                    else:
-                        self.result.emit(timestamp, np.nan, np.nan, np.nan)
-                except ValueError:
-                    self.result.emit(timestamp, np.nan, np.nan, np.nan)
 
-        except serial.SerialException as e:
-            print(f"Serial error: {e}")
-        finally:
-            if self.ser2:
-                self.ser2.close()
-    """
     def stop(self):
         self.is_running2 = False
         if self.ser2:
@@ -150,7 +115,7 @@ class Hum_Worker(QThread):
         self.quit()
         self.wait()
 
-
+#temperature
 class Temp_Worker(QThread):
     result = pyqtSignal(str, tuple)
     
@@ -216,6 +181,68 @@ class Temp_Worker(QThread):
         self.quit()
         self.wait()
 
+
+
+#pressure
+class Pressure_Worker(QThread):
+    result = pyqtSignal(str, float)
+    def __init__(self, port, interval, baud):
+        super().__init__()
+        self.ser3 = None
+        self.interval = interval
+        self.port = port
+        self.baud = baud
+        self.is_running3 = True
+        self.sensor_string = ""
+        self.sensor_string_complete = False
+        self.last_emit_time = dt.datetime.now()
+        self.latest_reading = None
+    def run(self):
+        try:
+            self.ser3 = serial.Serial(self.port, self.baud, parity='N', stopbits=1, bytesize=8, timeout=10000)
+            print(self.ser3)
+            while self.is_running3:
+                now_time = dt.datetime.now()
+                timestamp = str(now_time.strftime('%Y%m%dT%H%M%S.%f')[:-3])  
+
+                #continue readings (data comes in every 1 s)
+                if self.ser3.in_waiting > 0:
+                    inchar = self.ser3.read().decode('utf-8')
+                    self.sensor_string += inchar
+                    if inchar == '\r':
+                        self.sensor_string_complete = True
+
+                if self.sensor_string_complete:
+                    Pressure = self.sensor_string.strip()
+                    self.latest_reading = float(Pressure)
+                    
+                    if not self.sensor_string[0].isdigit():
+                        print(timestamp, self.sensor_string)
+                    #self.latest_reading = ""
+                    self.sensor_string = ""
+                    self.sensor_string_complete = False
+                    
+                if now_time - self.last_emit_time >= dt.timedelta(seconds=self.interval):
+                    if self.latest_reading:
+                        self.result.emit(timestamp, self.latest_reading)
+                        #print(timestamp, self.latest_reading)
+                    else:
+                        self.result.emit(timestamp, np.nan)
+                    self.last_emit_time = now_time
+
+        except serial.SerialException as e:
+            print(f"Serial error: {e}")
+        finally:
+            if self.ser3:
+                self.ser3.close()
+
+    def stop(self):
+        self.is_running3 = False
+        if self.ser3:
+            self.ser3.close()
+        self.quit()
+        self.wait()
+
 #temp conversion from hexadecimal 
 def hex_dec(self, T_hex):
     try:
@@ -247,32 +274,63 @@ def parse_temp(self, response):
         temperatures.append(hex_dec(self,hex_str))
     return tuple(temperatures)
 
+
+#to store pressure data
+class PressureModel(QObject):
+    dataChanged = pyqtSignal()
+
+    def __init__(self, parent=None):
+        super(PressureModel, self).__init__(parent)
+        self.Press_time = []
+        self.Press_data = []
+    def lenData(self, parent=QModelIndex()):
+        return len(self.Press_data)
+        
+    def appendData(self, time, pres):
+        self.Press_time.append(time)
+        self.Press_data.append(pres)
+        self.dataChanged.emit()
+
+    def clearData(self):
+        self.Press_time = []
+        self.Press_data = []
+        self.dataChanged.emit()
+
+    def getData(self):
+        return self.Press_time, self.Press_data
+        
+    def reset(self):
+        self.Press_time = []
+        self.Press_data = []
+        return None
+
+
 #to store tempdata
 class TemperatureModel(QObject):
     dataChanged = pyqtSignal()
 
     def __init__(self, parent=None):
         super(TemperatureModel, self).__init__(parent)
-        self.data = []
+        self.time = []
+        self.data = [[] for _ in range(8)]
 
     def lenData(self, parent=QModelIndex()):
-        return len(self.data)
+        return len(self.time)
 
     def appendData(self, time, *temps):
         self.data.append((time,) + temps)
         self.dataChanged.emit()
 
     def clearData(self):
-        self.data = []
+        self.data = [[] for _ in range(8)]
         self.dataChanged.emit()
 
-    def data(self, index, role=Qt.DisplayRole):
-        if role == Qt.DisplayRole:
-            row = index.row()
-            return self.data[row]
+    def getData(self):
+        return self.time, self.data
 
     def reset(self):
-        self.data = []
+        self.time = []
+        self.data = [[] for _ in range(8)]
         return None
 
 
@@ -282,28 +340,45 @@ class HumidityModel(QObject):
 
     def __init__(self, parent=None):
         super(HumidityModel, self).__init__(parent)
-        self.data = []
+        self.HUM_time = []
+        self.RH_val = []
+        self.TMP_val = []
+        self.AH_val = []
+        self.DEW_val = []
 
     def lenData(self, parent=QModelIndex()):
         return len(self.data)
+        
     #add abshum
     def appendData(self, time, hum, tmp, dew, abshum):
-        self.data.append((time, hum, tmp, dew, abshum))
+        self.HUM_time.append(time)
+        self.RH_val.append(hum)
+        self.TMP_val.append(tmp)
+        self.AH_val.append(dew)
+        self.DEW_val.append(abshum)
+        #self.data.append((time, hum, tmp, dew, abshum))
         self.dataChanged.emit()
+
+    def getData(self):
+        return self.HUM_time, self.RH_val,self.TMP_val, self.AH_val,self.DEW_val
 
     def clearData(self):
-        self.data = []
+        self.HUM_time = []
+        self.RH_val = []
+        self.TMP_val = []
+        self.AH_val = []
+        self.DEW_val = []
+        #self.data = []
         self.dataChanged.emit()
 
-    def data(self, index, role=Qt.DisplayRole):
-        if role == Qt.DisplayRole:
-            row = index.row()
-            return self.data[row]
-
     def reset(self):
-        self.data = []
+        self.HUM_time = []
+        self.RH_val = []
+        self.TMP_val = []
+        self.AH_val = []
+        self.DEW_val = []
+        #self.data = []
         return None
-
 
 
 class MainWindow(QMainWindow):
@@ -312,37 +387,50 @@ class MainWindow(QMainWindow):
         self.setWindowIcon(QIcon('logo.png'))
         self.worker1 = None
         self.worker2 = None
+        self.worker3 = None
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         #connect buttons to actions
         #self.ui.startStopButton.pressed.connect(self.toggleRun)
         self.ui.startStopButton.setCheckable(True)
         self.ui.startStopButton.clicked.connect(self.toggleRun)
-
+        self.ui.startStopButton_2.setCheckable(True)
+        self.ui.startStopButton_2.clicked.connect(self.togglePressure)
         
         self.ui.clearButton.pressed.connect(self.clearPlot)
         self.ui.HumclearButton.pressed.connect(self.HumclearPlot)
+        self.ui.PressclearButton.pressed.connect(self.PresclearPlot)
         
         self.ui.TempLogButton.pressed.connect(self.TempstartLogging)
         self.ui.HumLogButton.pressed.connect(self.HumstartLogging)
+
+        self.ui.PressLogButton.setCheckable(True)
+        self.ui.PressLogButton.pressed.connect(self.PressstartLogging)
+        
         self.ui.LogBothButton.setCheckable(True)
         self.ui.LogBothButton.clicked.connect(self.BothstartLogging)
 
-        
+        self.ui.refreshButton_2.pressed.connect(self.refreshSerialPorts)
         self.ui.refreshButton.pressed.connect(self.refreshSerialPorts)
         self.ui.saveDirectoryButton.pressed.connect(self.chooseSaveDirectory)
         self.ui.HumsaveDirectoryButton.pressed.connect(self.chooseHumSaveDirectory)
+        self.ui.PresssaveDirectoryButton.pressed.connect(self.choosePressSaveDirectory)
 
 
-        self.temperature_model = TemperatureModel()
-        self.humidity_model = HumidityModel() 
+        #self.temperature_model = TemperatureModel()
+        self.humidity_model = HumidityModel()
+        self.pressure_model = PressureModel()
+     
         self.initGraph()
         self.filename = None
         self.Humfilename = None
+        self.Pressfilename = None
         self.serialPort = None
         self.serialPort2 = None
+        self.serialPort3 = None
         self.saveDirectory = None
         self.HumsaveDirectory = None
+        self.PresssaveDirectory = None
         self.interval = 2 #2 sec default
         self.baud = 38400 #38400 default
         
@@ -367,53 +455,45 @@ class MainWindow(QMainWindow):
         except Exception as e:
             print(f"Error opening file: {e}")
 
+    def PressinitFile(self):
+        now = dt.datetime.now()
+        self.Pressfilename = "press_log_" + str(now.strftime('%Y%m%dT%H%M%S')) + ".csv"
+        try:
+            with open(f"{self.PresssaveDirectory}/{self.Pressfilename}", 'w', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow(['Time', 'Pressure'])
+        except Exception as e:
+            print(f"Error opening file: {e}")
+
     def initGraph(self):
-        #PLOT1
-        self.ui.graphWidget.setBackground("w")
+        #PLOT 1
+        #TempPlot = self.ui.TempPlotWidget
+        self.ui.TempPlotWidget.setBackground("w")
         styles = {"color": "black", "font-size": "18px"}
-        self.ui.graphWidget.setLabel("left", "Temperature (°C)", **styles)
-        self.ui.graphWidget.setLabel("bottom", "Time", **styles)
-        self.ui.graphWidget.getAxis('bottom').setStyle(tickTextOffset=10)
-        self.ui.graphWidget.setAxisItems({'bottom': DateAxisItem(orientation='bottom')})
-        self.ui.graphWidget.showGrid(x=True, y=True, alpha=0.4)
+        self.ui.TempPlotWidget.setLabel("left", "Temperature (°C)", **styles)
+        self.ui.TempPlotWidget.setLabel("bottom", "Time", **styles)
+        self.ui.TempPlotWidget.getAxis('bottom').setStyle(tickTextOffset=10)
+        self.ui.TempPlotWidget.setAxisItems({'bottom': DateAxisItem(orientation='bottom')})
+        self.ui.TempPlotWidget.showGrid(x=True, y=True, alpha=0.4)
         self.time = []
         self.data = [[] for _ in range(8)]
         self.plotLines = []
         self.colors = [(183, 101, 224), (93, 131, 212), (49, 205, 222), (36, 214, 75), (214, 125, 36), (230, 78, 192), (209, 84, 65), (0, 184, 245)]
         for i in range(8):
-            plot_line = self.ui.graphWidget.plot(self.time, self.data[i], pen=pg.mkPen(color=self.colors[i], width=2))
+            plot_line = self.ui.TempPlotWidget.plot(self.time, self.data[i], pen=pg.mkPen(color=self.colors[i], width=2))
             self.plotLines.append(plot_line)
 
-
-        #PLOT 2
-        """
-        self.ui.HumPlotWidget.setBackground("w")
-        self.ui.HumPlotWidget.setLabel("left", "Value", **styles)
-        self.ui.HumPlotWidget.setLabel("bottom", "Time", **styles)
-        self.ui.HumPlotWidget.getAxis('bottom').setStyle(tickTextOffset=10)
-        self.ui.HumPlotWidget.setAxisItems({'bottom': DateAxisItem(orientation='bottom')})
-        self.ui.HumPlotWidget.showGrid(x=True, y=True, alpha=0.4)
-        self.hum_time = []
-        self.hum_data = {'HUM': [], 'TMP': [], 'DEW': [], 'absHUM': []}
-        self.hum_plotLines = {}
-        self.hum_plotLines['HUM'] = self.ui.HumPlotWidget.plot(self.hum_time, self.hum_data['HUM'], pen=pg.mkPen(color=(190, 17, 17), width=2), name='HUM')
-        self.hum_plotLines['TMP'] = self.ui.HumPlotWidget.plot(self.hum_time, self.hum_data['TMP'], pen=pg.mkPen(color=(0, 184, 245), width=2), name='TMP')
-        self.hum_plotLines['DEW'] = self.ui.HumPlotWidget.plot(self.hum_time, self.hum_data['DEW'], pen=pg.mkPen(color=(0,0,0), width=2), name='DEW')
-        """
-
+        
+        #PLOT 2 
+        #graphic layout for multi-axes plot (HUM, TMP, DEW)
         self.ui.graphics_layout.setBackground("w")
         self.hum_plot = self.ui.graphics_layout.addPlot(row=0, col=0)
         self.tmp_plot = self.ui.graphics_layout.addPlot(row=1, col=0)
         self.dew_plot = self.ui.graphics_layout.addPlot(row=2, col=0)
 
-
-        self.hum_plot.setLabel('left', text='<span style="color: #be1111;">RH(%)</span>')
-        self.tmp_plot.setLabel('left', text='<span style="color: #00b8f5;">TMP(°C)</span>')
-        self.dew_plot.setLabel('left',text='<span style="color: #000000;">DEW(°C)</span>')
-
-
         self.dew_plot.setLabel('bottom', 'Time', **styles)
         self.hum_plot.getAxis('bottom').setStyle(tickTextOffset=10)
+
         self.tmp_plot.getAxis('bottom').setStyle(tickTextOffset=10)
         self.dew_plot.getAxis('bottom').setStyle(tickTextOffset=10)
 
@@ -421,13 +501,29 @@ class MainWindow(QMainWindow):
         self.tmp_plot.setAxisItems({'bottom': TimeAxisItem(orientation='bottom')})
         self.dew_plot.setAxisItems({'bottom': DateAxisItem(orientation='bottom')})
 
+        self.hum_plot.setAxisItems({'left': FmtAxisItem(orientation='left')})
+        self.tmp_plot.setAxisItems({'left': FmtAxisItem(orientation='left')})
+        self.dew_plot.setAxisItems({'left': FmtAxisItem(orientation='left')})
+
+        self.hum_plot.setLabel('left', text='<span style="color: #be1111;">RH(%)</span>')
+        self.tmp_plot.setLabel('left', text='<span style="color: #00b8f5;">TMP(°C)</span>')
+        self.dew_plot.setLabel('left',text='<span style="color: #000000;">DEW(°C)</span>')
+        
+        """
         self.hum_time = []
         self.hum_data = {'HUM': [], 'TMP': [], 'DEW': [], 'absHUM': []}
         self.hum_plotLines = {}
         self.hum_plotLines['HUM'] = self.hum_plot.plot(self.hum_time, self.hum_data['HUM'], pen=pg.mkPen(color=(190, 17, 17), width=2), name='HUM')
         self.hum_plotLines['TMP'] = self.tmp_plot.plot(self.hum_time, self.hum_data['TMP'], pen=pg.mkPen(color=(0, 184, 245), width=2), name='TMP')
         self.hum_plotLines['DEW'] = self.dew_plot.plot(self.hum_time, self.hum_data['DEW'], pen=pg.mkPen(color=(0,0,0), width=2), name='DEW')
-    
+        """
+        
+        self.hum_plotLines = {}
+        self.hum_plotLines['HUM'] = self.hum_plot.plot([],[], pen=pg.mkPen(color=(190, 17, 17), width=2), name='HUM')
+        self.hum_plotLines['TMP'] = self.tmp_plot.plot([],[], pen=pg.mkPen(color=(0, 184, 245), width=2), name='TMP')
+        self.hum_plotLines['DEW'] = self.dew_plot.plot([],[], pen=pg.mkPen(color=(0,0,0), width=2), name='DEW')
+
+         
 
         #PLOT 3
         self.ui.HumPlotWidget2.setBackground("w")
@@ -444,10 +540,23 @@ class MainWindow(QMainWindow):
         self.ui.HumPlotWidget2.setAxisItems({'bottom': DateAxisItem(orientation='bottom')})
 
         self.ui.HumPlotWidget2.setLabel("left", "Absolute Humidity (g/m3)", **{"color": "blue", "font-size": "18px"})
-        self.hum_plot = self.ui.HumPlotWidget2.plot(self.hum_time, self.hum_data['absHUM'], pen=pg.mkPen(color='b', width=2), name="absHUM")
+        #self.hum_plot = self.ui.HumPlotWidget2.plot(self.hum_time, self.hum_data['absHUM'], pen=pg.mkPen(color='b', width=2), name="absHUM")
+        self.hum_plot = self.ui.HumPlotWidget2.plot([],[], pen=pg.mkPen(color='b', width=2), name="absHUM")
         self.ui.HumPlotWidget2.setLabel("right", "Output Temperature (°C)", **{"color": "red", "font-size": "18px"})
         self.temp_plot = pg.PlotDataItem(self.time, self.data[7], pen=pg.mkPen(color='r', width=2), name="T8")
         self.temp_viewbox.addItem(self.temp_plot)
+
+        #PLOT 4
+        #Pressure Plot
+        self.ui.PressPlotWidget.setLabel("left", "Pressure (psi)", **styles)
+        self.ui.PressPlotWidget.setLabel("bottom", "Time", **styles)
+        self.ui.PressPlotWidget.getAxis('bottom').setStyle(tickTextOffset=10)
+        self.ui.PressPlotWidget.setAxisItems({'bottom': DateAxisItem(orientation='bottom')})
+        self.ui.PressPlotWidget.showGrid(x=True, y=True, alpha=0.4)
+
+        #self.Presstime = []
+        #self.Pressdata = []
+        self.PressPlot = self.ui.PressPlotWidget.plot([],[], pen=pg.mkPen(color='blue', width=2))
     
     def updateViews(self):
         self.temp_viewbox.setGeometry(self.ui.HumPlotWidget2.getPlotItem().getViewBox().sceneBoundingRect())
@@ -469,6 +578,42 @@ class MainWindow(QMainWindow):
         else:
             self.startRun()
 
+
+    def togglePressure(self):
+        if self.ui.startStopButton_2.isChecked():
+            self.ui.startStopButton_2.setText("Running")
+            self.ui.startStopButton_2.setStyleSheet("QPushButton {background-color: lightgreen}")
+        else:
+            self.ui.startStopButton_2.setText("Stopped")
+            self.ui.startStopButton_2.setStyleSheet("QPushButton {background-color: lightcoral}")
+            self.ui.PressLogButton.setText("Logging Stopped")
+            self.ui.PressLogButton.setStyleSheet("QPushButton {background-color: lightcoral}")
+            
+        if self.worker3 is not None:
+            self.stopPressure()
+        else:
+            self.startPressure()
+
+    
+    def startPressure(self):
+        self.serialPort3 = self.ui.PressPortBox.currentText()
+        self.interval3 = int(self.ui.intervalInput_2.text())
+        print(f"Using input interval: {self.interval3} seconds")
+        self.baud3 = int(self.ui.PressBaudBox.currentText())
+        print(f"Connected to Pressure Sensor: {self.serialPort3}")
+        
+        self.worker3 = Pressure_Worker(self.serialPort3, self.interval3, self.baud3)
+        self.worker3.result.connect(self.Pressupdate)
+        self.worker3.start()
+
+    
+    
+    def stopPressure(self):
+        if self.worker3:
+            self.worker3.stop()
+            self.worker3 = None
+            print("Stopping Serial 3")
+        
     def startRun(self):
         self.serialPort = self.ui.TempPortBox.currentText()
         self.baud = int(self.ui.TempBaudBox.currentText())
@@ -532,12 +677,18 @@ class MainWindow(QMainWindow):
         self.temp_plot.setData(self.time, self.data[7])
         
     def HumclearPlot(self):
+        self.humidity_model.clearData()
+        """
         self.hum_time = []
         self.hum_data = {'HUM': [], 'TMP': [], 'DEW': [], 'absHUM': []}
         self.hum_plotLines['HUM'].setData(self.hum_time, self.hum_data['HUM'])
         self.hum_plotLines['TMP'].setData(self.hum_time, self.hum_data['TMP'])
         self.hum_plotLines['DEW'].setData(self.hum_time, self.hum_data['DEW'])
         self.hum_plot.setData(self.hum_time,self.hum_data['absHUM'])
+        """
+        
+    def PresclearPlot(self):
+        self.pressure_model.clearData()
 
     #Logging
     def TempstartLogging(self):
@@ -548,6 +699,17 @@ class MainWindow(QMainWindow):
         self.HuminitFile()
         self.ui.HumfileLabel.setText(f"{self.HumsaveDirectory}/{self.Humfilename}")
 
+    def PressstartLogging(self):
+        if self.ui.PressLogButton.isChecked():
+            self.ui.PressLogButton.setText("Logging")
+            self.ui.PressLogButton.setStyleSheet("QPushButton {background-color: lightgreen}")
+        else:
+            self.ui.PressLogButton.setText("Log Pressure")
+            self.ui.PressLogButton.setStyleSheet("QPushButton {background-color: white}")
+
+        self.PressinitFile()
+        self.ui.PressfileLabel.setText(f"{self.PresssaveDirectory}/{self.Pressfilename}")
+        
     def BothstartLogging(self):
         if self.ui.LogBothButton.isChecked():
             self.ui.LogBothButton.setText("Logging")
@@ -564,19 +726,20 @@ class MainWindow(QMainWindow):
         self.ui.fileLabel.setText(f"{self.saveDirectory}/{self.filename}")
         self.HuminitFile()
         self.ui.HumfileLabel.setText(f"{self.HumsaveDirectory}/{self.Humfilename}")
-
+        #self.PressinitFile()
+        #self.ui.PressfileLabel.setText(f"{self.PresssaveDirectory}/{self.Pressfilename}")
     
  
     def refreshSerialPorts(self):
         self.ui.TempPortBox.clear()
         self.ui.HumPortBox.clear()
+        self.ui.PressPortBox.clear()
         ports = QSerialPortInfo.availablePorts()
         for port in ports:
             self.ui.TempPortBox.addItem(port.portName())
             self.ui.HumPortBox.addItem(port.portName())
+            self.ui.PressPortBox.addItem(port.portName())
         
-            
-            
     def chooseSaveDirectory(self):
         self.saveDirectory = QFileDialog.getExistingDirectory(self, "Save Directory")
         if self.saveDirectory:
@@ -587,6 +750,12 @@ class MainWindow(QMainWindow):
         if self.HumsaveDirectory:
             self.ui.HumfileLabel.setText(f"{self.HumsaveDirectory}")
 
+    def choosePressSaveDirectory(self):
+        self.PresssaveDirectory = QFileDialog.getExistingDirectory(self, "Save Directory")
+        if self.PresssaveDirectory:
+            self.ui.PressfileLabel.setText(f"{self.PresssaveDirectory}")
+
+    #TEMP slot
     @pyqtSlot(str, tuple)
     def updateTemp(self, current_time, temperatures):
         for i in range(8):
@@ -596,7 +765,7 @@ class MainWindow(QMainWindow):
                 self.ui.labels[i].setText(f"T{i + 1}: err")
 
         active_ch = tuple(temperatures[i] if self.ui.checkboxes[i].isChecked() else np.nan for i in range(8))
-        self.temperature_model.appendData(current_time, *active_ch)
+        #self.temperature_model.appendData(current_time, *active_ch)
 
         formattime = dt.datetime.strptime(current_time, '%Y%m%dT%H%M%S.%f').timestamp()
         self.time.append(formattime)
@@ -608,8 +777,6 @@ class MainWindow(QMainWindow):
         self.temp_plot.setData(self.time, self.data[7])
         if self.filename:
             self.LogData(current_time, temperatures)
-
-
     def LogData(self, timestamp, temperatures):
         try:
             with open(f"{self.saveDirectory}/{self.filename}", 'a', newline='') as file:
@@ -619,7 +786,9 @@ class MainWindow(QMainWindow):
         except Exception as e:
             print(f"Error writing to file: {e}")
 
+    #HUMIDITY SLOT
     @pyqtSlot(str, float, float, float, float)
+    
     def updateHum(self, timestamp, HUM, TMP, DEW, absHUM):
         print(f"{timestamp}, RH: {HUM}, TMP: {TMP}, DEW: {DEW}, AH: {absHUM:.2f}")
         self.ui.Humlabel1.setText(f"RH: {HUM:.2f}")
@@ -628,7 +797,14 @@ class MainWindow(QMainWindow):
         self.ui.Humlabel4.setText(f"AH: {absHUM:.2f}")
         formattime = dt.datetime.strptime(timestamp, '%Y%m%dT%H%M%S.%f').timestamp()
 
-        self.humidity_model.appendData(timestamp, HUM, TMP, DEW, absHUM)
+        self.humidity_model.appendData(formattime, HUM, TMP, DEW, absHUM)
+        HUM_time, RH_val,TMP_val,AH_val,DEW_val = self.humidity_model.getData()
+        self.hum_plotLines['HUM'].setData(HUM_time, RH_val)
+        self.hum_plotLines['TMP'].setData(HUM_time, TMP_val)
+        self.hum_plotLines['DEW'].setData(HUM_time, DEW_val)
+        self.hum_plot.setData(HUM_time, AH_val)
+
+        """
         self.hum_time.append(formattime)
         self.hum_data['HUM'].append(HUM)
         self.hum_data['TMP'].append(TMP)
@@ -639,10 +815,9 @@ class MainWindow(QMainWindow):
         self.hum_plotLines['TMP'].setData(self.hum_time, self.hum_data['TMP'])
         self.hum_plotLines['DEW'].setData(self.hum_time, self.hum_data['DEW'])
         self.hum_plot.setData(self.hum_time, self.hum_data['absHUM'])
-
+        """
         if self.Humfilename:
             self.HumLogData(timestamp, HUM, TMP, DEW, absHUM)
-            
     def HumLogData(self, timestamp, HUM, TMP, DEW, absHUM):
         try:
             with open(f"{self.HumsaveDirectory}/{self.Humfilename}", 'a', newline='') as file:
@@ -651,6 +826,40 @@ class MainWindow(QMainWindow):
                 file.flush()
         except Exception as e:
             print(f"Error writing to file: {e}")
+
+    #PRESSURE slot
+    @pyqtSlot(str, float)
+    def Pressupdate(self, timestamp, Pressure):
+        if Pressure != 'err':
+            self.ui.Presslabel.setText(f"P: {Pressure} psi")
+        else:
+            self.ui.Presslabel.setText(f"P: err")
+
+        formattime = dt.datetime.strptime(timestamp, '%Y%m%dT%H%M%S.%f').timestamp()
+        print(f"{timestamp}: {Pressure}")
+        #model?? seems like I've not been using model
+        #self.Presstime.append(formattime)
+        #self.Pressdata.append(Pressure)
+        #self.PressPlot.setData(self.Presstime, self.Pressdata)
+
+        #append data to model instead of storing in a list in mainwindow
+        self.pressure_model.appendData(formattime, Pressure)
+        #get data from model
+        Press_time, Press_data = self.pressure_model.getData()
+        self.PressPlot.setData(Press_time, Press_data)
+
+        if self.Pressfilename:
+            self.PressLogData(timestamp, Pressure)
+            
+    def PressLogData(self, timestamp, Pressure):
+        try:
+            with open(f"{self.PresssaveDirectory}/{self.Pressfilename}", 'a', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow([timestamp, Pressure])
+                file.flush()
+        except Exception as e:
+            print(f"Error writing to file: {e}")
+
 
 app = QApplication(sys.argv)
 path = os.path.join(os.path.dirname(sys.modules[__name__].__file__), 'logo.png')
