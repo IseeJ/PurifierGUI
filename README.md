@@ -63,3 +63,6 @@ when RH is Relative Humidity in % and T is Temperature in degree Celsius
 #### AH to ppm ####
 ...
 
+
+$\Delta V \propto \int_{}^{} I(t) \space dt$
+
