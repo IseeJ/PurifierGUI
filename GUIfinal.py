@@ -153,7 +153,7 @@ class Temp_Worker(QThread):
                         temperatures = parse_temp(self,response)
                         now_time = dt.datetime.now()
                         current_time = str(now_time.strftime('%Y%m%dT%H%M%S.%f')[:-3])  
-                        print(f"{current_time}, Temperatures: {temperatures}")
+                        print(f"Temperature = {current_time}: {temperatures}")
                         self.result.emit(current_time, temperatures)
                     else:
                         print("No response")
@@ -200,7 +200,7 @@ class Pressure_Worker(QThread):
     def run(self):
         try:
             self.ser3 = serial.Serial(self.port, self.baud, parity='N', stopbits=1, bytesize=8, timeout=10000)
-            print(self.ser3)
+            #print(self.ser3)
             while self.is_running3:
                 now_time = dt.datetime.now()
                 timestamp = str(now_time.strftime('%Y%m%dT%H%M%S.%f')[:-3])  
@@ -214,10 +214,10 @@ class Pressure_Worker(QThread):
 
                 if self.sensor_string_complete:
                     Pressure = self.sensor_string.strip()
-                    self.latest_reading = float(Pressure)
-                    
-                    if not self.sensor_string[0].isdigit():
-                        print(timestamp, self.sensor_string)
+                    if self.sensor_string[0].isdigit():
+                        self.latest_reading = float(Pressure)
+                    #if not self.sensor_string[0].isdigit():
+                    #    print(timestamp, self.sensor_string)
                     #self.latest_reading = ""
                     self.sensor_string = ""
                     self.sensor_string_complete = False
@@ -581,6 +581,9 @@ class MainWindow(QMainWindow):
         if self.ui.startStopButton.isChecked():
             self.ui.startStopButton.setText("Running")
             self.ui.startStopButton.setStyleSheet("QPushButton {background-color: lightgreen}")
+            self.ui.startStopButton_2.setText("Running")
+            self.ui.startStopButton_2.setStyleSheet("QPushButton {background-color: lightgreen}")
+            
         else:
             self.ui.startStopButton.setText("Stopped")
             self.ui.startStopButton.setStyleSheet("QPushButton {background-color: lightcoral}")
@@ -629,7 +632,8 @@ class MainWindow(QMainWindow):
             self.worker3.stop()
             self.worker3 = None
             print("Stopping Serial 3")
-        
+
+    #for log all (Tem,Hum,Pres)
     def startRun(self):
         self.serialPort = self.ui.TempPortBox.currentText()
         self.baud = int(self.ui.TempBaudBox.currentText())
@@ -637,6 +641,62 @@ class MainWindow(QMainWindow):
         self.serialPort2 = self.ui.HumPortBox.currentText()
         self.baud2 = int(self.ui.HumBaudBox.currentText())
 
+        self.serialPort3 = self.ui.PressPortBox.currentText()
+        self.baud3 = int(self.ui.PressBaudBox.currentText())
+
+        
+        if 'COM' not in self.serialPort:
+            self.serialPort = "/dev/" + self.ui.TempPortBox.currentText()
+        if 'COM' not in self.serialPort2:
+            self.serialPort2 = "/dev/" + self.ui.HumPortBox.currentText()
+            
+        print(f"Connected to Tmp: {self.serialPort}")
+        #print(f"Set Tmp baud rate to: {self.baud}")
+        print(f"Connected to Hum: {self.serialPort2}")
+        #print(f"Set Hum baud rate to: {self.baud2}")
+        
+        
+        if self.serialPort is None:
+            print(self, "No port selected")
+            return
+            
+        try:
+            self.interval = int(self.ui.intervalInput.text())
+            self.interval3 = int(self.ui.intervalInput_2.text())
+            print(f"Using input interval: {self.interval} seconds")
+        except ValueError:
+            print("Using default interval: 2 seconds")
+            self.interval = 2
+            self.interval3 = 2
+        try:
+            self.worker1 = Temp_Worker(self.serialPort, self.interval, self.baud)
+            self.worker1.result.connect(self.updateTemp)
+            self.worker1.start()
+            print("Starting Temp_Worker")
+
+            self.worker2 = Hum_Worker(self.serialPort2, self.interval, self.baud2)
+            self.worker2.result.connect(self.updateHum)
+            self.worker2.start()
+            print("Starting Hum_Worker")
+
+            self.worker3 = Pressure_Worker(self.serialPort3, self.interval3, self.baud3)
+            self.worker3.result.connect(self.Pressupdate)
+            self.worker3.start()
+            print("Starting Pres_Worker")
+            
+        except serial.SerialException as e:
+            print(f"Could not open serial port: {e}")
+            self.worker1 = None
+            self.worker2 = None
+            self.worker3 = None
+    
+    def startRunTwo(self):
+        self.serialPort = self.ui.TempPortBox.currentText()
+        self.baud = int(self.ui.TempBaudBox.currentText())
+
+        self.serialPort2 = self.ui.HumPortBox.currentText()
+        self.baud2 = int(self.ui.HumBaudBox.currentText())
+        
         if 'COM' not in self.serialPort:
             self.serialPort = "/dev/" + self.ui.TempPortBox.currentText()
         if 'COM' not in self.serialPort2:
@@ -686,24 +746,10 @@ class MainWindow(QMainWindow):
 
     def clearPlot(self):
         self.temperature_model.clearData()
-        """
-        self.time = []
-        self.data = [[] for _ in range(8)]
-        for i in range(8):
-            self.plotLines[i].setData(self.time, self.data[i])
-        #self.temp_plot.setData(self.time, self.data[i])
-        self.temp_plot.setData(self.time, self.data[7])
-        """
+
     def HumclearPlot(self):
         self.humidity_model.clearData()
-        """
-        self.hum_time = []
-        self.hum_data = {'HUM': [], 'TMP': [], 'DEW': [], 'absHUM': []}
-        self.hum_plotLines['HUM'].setData(self.hum_time, self.hum_data['HUM'])
-        self.hum_plotLines['TMP'].setData(self.hum_time, self.hum_data['TMP'])
-        self.hum_plotLines['DEW'].setData(self.hum_time, self.hum_data['DEW'])
-        self.hum_plot.setData(self.hum_time,self.hum_data['absHUM'])
-        """
+
         
     def PresclearPlot(self):
         self.pressure_model.clearData()
@@ -734,18 +780,20 @@ class MainWindow(QMainWindow):
             self.ui.LogBothButton.setStyleSheet("QPushButton {background-color: lightgreen}")
             self.ui.HumLogButton.setStyleSheet("QPushButton {background-color: darkGray}")
             self.ui.TempLogButton.setStyleSheet("QPushButton {background-color: darkGray}")
+            self.ui.PressLogButton.setStyleSheet("QPushButton {background-color: darkGray}")
         else:
             self.ui.LogBothButton.setText("Log Both")
             self.ui.LogBothButton.setStyleSheet("QPushButton {background-color: white}")
             self.ui.HumLogButton.setStyleSheet("QPushButton {background-color: white}")
             self.ui.TempLogButton.setStyleSheet("QPushButton {background-color: white}")
+            self.ui.PressLogButton.setStyleSheet("QPushButton {background-color: white}")
             
         self.initFile()
         self.ui.fileLabel.setText(f"{self.saveDirectory}/{self.filename}")
         self.HuminitFile()
         self.ui.HumfileLabel.setText(f"{self.HumsaveDirectory}/{self.Humfilename}")
-        #self.PressinitFile()
-        #self.ui.PressfileLabel.setText(f"{self.PresssaveDirectory}/{self.Pressfilename}")
+        self.PressinitFile()
+        self.ui.PressfileLabel.setText(f"{self.PresssaveDirectory}/{self.Pressfilename}")
     
  
     def refreshSerialPorts(self):
@@ -804,6 +852,7 @@ class MainWindow(QMainWindow):
         
         if self.filename:
             self.LogData(current_time, temperatures)
+            
     def LogData(self, timestamp, temperatures):
         try:
             with open(f"{self.saveDirectory}/{self.filename}", 'a', newline='') as file:
@@ -817,7 +866,7 @@ class MainWindow(QMainWindow):
     @pyqtSlot(str, float, float, float, float)
     
     def updateHum(self, timestamp, HUM, TMP, DEW, absHUM):
-        print(f"{timestamp}, RH: {HUM}, TMP: {TMP}, DEW: {DEW}, AH: {absHUM:.2f}")
+        print(f"Humudity = {timestamp}: RH: {HUM}, TMP: {TMP}, DEW: {DEW}, AH: {absHUM:.2f}")
         self.ui.Humlabel1.setText(f"RH: {HUM:.2f}")
         self.ui.Humlabel2.setText(f"Tmp: {TMP:.2f}")
         self.ui.Humlabel3.setText(f"Dew: {DEW:.2f}")
@@ -863,12 +912,11 @@ class MainWindow(QMainWindow):
             self.ui.Presslabel.setText(f"P: err")
 
         formattime = dt.datetime.strptime(timestamp, '%Y%m%dT%H%M%S.%f').timestamp()
-        print(f"{timestamp}: {Pressure}")
+        print(f"Pressure = {timestamp}: {Pressure}")
         #model?? seems like I've not been using model
         #self.Presstime.append(formattime)
         #self.Pressdata.append(Pressure)
         #self.PressPlot.setData(self.Presstime, self.Pressdata)
-
         #append data to model instead of storing in a list in mainwindow
         self.pressure_model.appendData(formattime, Pressure)
         #get data from model
