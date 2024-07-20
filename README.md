@@ -49,9 +49,23 @@ kPa (0 – 510.212)
 
 - Writing commands: self.ser.write(b'[command]\r\n')
 
-- Commands
+- Commands:
     - check unit: U,?
     - set unit: U,psi U,atm U,bar U,kPa
+
+
+### Humidity Logger ###
+[EZO-PRS™ Embedded Pressure Sensor](https://atlas-scientific.com/probes/humidity-probe/)
+0 – 100% RH
+
+- Commands:
+    - Enable All 3 readings:
+        - O,HUM,1
+        - O,T,1
+        - O,Dew,1
+    - Check of all readings are enabled: O,? --> ?,O,HUM,T,Dew of all anabled
+
+
 
 ### Temperature Logger ###
 #### notes on connection ####
