@@ -42,9 +42,13 @@ To ensure the data is being recorded properly, both logging and start/stop butto
 
 ### Pressure Logger ###
 [EZO-PRS™ Embedded Pressure Sensor](https://atlas-scientific.com/product/pressure-sensor/)
+
 psi (0 – 74.000) Default
+
 atm (0 – 5.03)
+
 bar (0 – 5.102)
+
 kPa (0 – 510.212)
 
 - Writing commands: self.ser.write(b'[command]\r\n')
@@ -56,6 +60,7 @@ kPa (0 – 510.212)
 
 ### Humidity Logger ###
 [EZO-PRS™ Embedded Pressure Sensor](https://atlas-scientific.com/probes/humidity-probe/)
+
 0 – 100% RH
 
 - Commands:
