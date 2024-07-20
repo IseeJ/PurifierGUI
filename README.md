@@ -40,7 +40,7 @@ To ensure the data is being recorded properly, both logging and start/stop butto
 
 ## Additional Information for debugging ##
 
-### Pressure Logger ###
+### 1. Pressure Logger ###
 [EZO-PRS™ Embedded Pressure Sensor](https://atlas-scientific.com/product/pressure-sensor/)
 
 psi (0 – 74.000) Default
@@ -58,7 +58,7 @@ kPa (0 – 510.212)
     - set unit: U,psi U,atm U,bar U,kPa
 
 
-### Humidity Logger ###
+### 2. Humidity Logger ###
 [EZO-PRS™ Embedded Pressure Sensor](https://atlas-scientific.com/probes/humidity-probe/)
 
 0 – 100% RH
@@ -72,7 +72,7 @@ kPa (0 – 510.212)
 
 
 
-### Temperature Logger ###
+### 3. Temperature Logger ###
 #### notes on connection ####
 Power on the device before plugging in otherwise serial port won't be recognized.
 
