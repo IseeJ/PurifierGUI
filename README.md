@@ -47,8 +47,7 @@ atm (0 – 5.03)
 bar (0 – 5.102)
 kPa (0 – 510.212)
 
-- Writing commands:
-self.ser2.write(b'[command]\r\n')
+- Writing commands: self.ser.write(b'[command]\r\n')
 
 - Commands
     - check unit: U,?
