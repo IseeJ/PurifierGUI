@@ -40,6 +40,20 @@ To ensure the data is being recorded properly, both logging and start/stop butto
 
 ## Additional Information for debugging ##
 
+### Pressure Logger ###
+[EZO-PRS™ Embedded Pressure Sensor](https://atlas-scientific.com/product/pressure-sensor/)
+psi (0 – 74.000) Default
+atm (0 – 5.03)
+bar (0 – 5.102)
+kPa (0 – 510.212)
+
+- Writing commands:
+self.ser2.write(b'[command]\r\n')
+
+- Commands
+    - check unit: U,?
+    - set unit: U,psi U,atm U,bar U,kPa
+
 ### Temperature Logger ###
 #### notes on connection ####
 Power on the device before plugging in otherwise serial port won't be recognized.
