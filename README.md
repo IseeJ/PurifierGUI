@@ -78,6 +78,7 @@ Read: 01 16 7b 28 48 4c 45 48 54 43 34 30 39 35 68 71 **e3 00 2b 01 00 00 00 00 
 
 where the first 16 bits and last 4 bits are the same in all T readings, the middle 16 bits represents temperature readings for the 8 channels (2 bits or 4 digits per channel), Temperature is recorded in 4 digits Hexadecimal number read backward (Little endian system: stores the least-significant byte at the smallest address) For example, the conversion between the reading in channel T2 would be, 2b 01 --> 012b --> 299 --> 29.9 degrees Celsius
 
+- - - -
 ### Water vapor concentration ###
 
 #### RH to AH ####
