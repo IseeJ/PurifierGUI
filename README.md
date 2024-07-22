@@ -14,7 +14,7 @@ $cd .\Desktop\TempGUI\GUIfinal\
 $python .\GUIfinal.py
 ```
 ![Fig1](https://github.com/IseeJ/TempGUI/blob/main/Screenshot1.png?raw=true)
-![Fig2](https://github.com/IseeJ/TempGUI/blob/main/Screenshot2.png?raw=true)
+![Fig2](https://github.com/IseeJ/TempGUI/blob/main/Screenshot0.png?raw=true)
 
 ## Connecting Serial Communications and Logging data ##
 
