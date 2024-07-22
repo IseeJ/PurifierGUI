@@ -203,9 +203,10 @@ class Pressure_Worker(QThread):
     def run(self):
         try:
             self.ser3 = serial.Serial(self.port, self.baud, parity='N', stopbits=1, bytesize=8, timeout=10000)
-            self.ser3.write(b'U,bar\r\n')
-            self.ser3.write(b'U,?\r\n')
-            #print(self.ser3)
+            self.ser3.write(b'U,psi\r\n') #set unit to psi (default)
+            self.ser3.write(b'U,?\r\n') #what is the current unit
+            self.ser3.write(b'Cal,0\r\n') #low point calibration in psi
+            #self.ser3.write(b'Cal,clear\r\n') #uncomment to clear calibration to factory setting
             while self.is_running3:
                 now_time = dt.datetime.now()
                 timestamp = str(now_time.strftime('%Y%m%dT%H%M%S.%f')[:-3])  
@@ -221,9 +222,10 @@ class Pressure_Worker(QThread):
                     Pressure = self.sensor_string.strip()
                     if self.sensor_string[0].isdigit():
                         #conver gauge pressure to absolute pressure
-                        self.latest_reading = ((float(Pressure)+self.ATM_P_bar)*1000)*0.75006168 #convert to milli bar then to Torr
+                        Pressure_bar = float(Pressure)*0.06894757 #convert psi to bar
+                        self.latest_reading = (Pressure_bar+self.ATM_P_bar)*750.061683 #convert to Torr
                     else:
-                        print(self.sensor_string.strip())
+                        print(self.sensor_string)
                     #if not self.sensor_string[0].isdigit():
                     #    print(timestamp, self.sensor_string)
                     #self.latest_reading = ""
@@ -473,7 +475,7 @@ class MainWindow(QMainWindow):
         try:
             with open(f"{self.PresssaveDirectory}/{self.Pressfilename}", 'w', newline='') as file:
                 writer = csv.writer(file)
-                writer.writerow(['Time', 'Pressure'])
+                writer.writerow(['Time', 'Pressure (Torr)'])
         except Exception as e:
             print(f"Error opening file: {e}")
 
