@@ -47,6 +47,8 @@ psi (0 – 74.000) Default, atm (0 – 5.03), bar (0 – 5.102), kPa (0 – 510.
 
 Only read gauge pressure (relative to atmospheric pressure)
 
+Conversion: $P_{abs} = P_{gauge} + P_{atm}$
+
 - Writing commands: self.ser.write(b'[command]\r\n')
 
 - Commands:
