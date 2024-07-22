@@ -3,7 +3,7 @@ GUI for temperature and humidity monitoring in LAr purifier (for Temperature log
 
 *Updated on 7/18/24: Use the **GUIfinal.py** with **TabWindow.py***
 
-*Updated on 7/22/24: Converting gauge pressure to absolute pressure, Configure default unit to be bar and plot the conversion to Torr*
+*Updated on 7/22/24: Converting gauge pressure to absolute pressure, Configure default unit to be psi and plot the conversion to Torr, calibrate the low point psi*
 
 On the PC:
 
@@ -65,7 +65,9 @@ Showing pressure in 3 units. plot in Torr:
 - Commands:
     - check unit: U,?
     - set unit: U,psi U,atm U,bar U,kPa
-    - calibration Cal,n
+    - Low point calibration in psi: Cal,0 (before cal: reads 855 Torr at atm, after cal: reads 760 Torr at atm)
+    - Restore calibration to factory setting: Cal,clear
+      
 
 
 ### 2. Humidity Logger ###
