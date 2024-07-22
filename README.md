@@ -1,9 +1,9 @@
 # TempGUI
 GUI for temperature and humidity monitoring in LAr purifier (for Temperature logger and EZO Atlas sensors)
 
-Updated on 7/18/24: Use the **GUIfinal.py** with **TabWindow.py**
+*Updated on 7/18/24: Use the **GUIfinal.py** with **TabWindow.py***
 
-Updated on 7/22/24: Converting gauge pressure to absolute pressure, Configure default unit to be bar and plot the conversion to Torr
+*Updated on 7/22/24: Converting gauge pressure to absolute pressure, Configure default unit to be bar and plot the conversion to Torr*
 
 On the PC:
 
@@ -54,7 +54,11 @@ Conversion: $P_{abs} = P_{gauge} + P_{atm}$
 $P_{atm}$ = 14.969 psi = 1 atm = 1.01325 bar = 101.325 kPa
 
 conversion fo mbar then to Torr
-Line 224: ((float(Pressure)+self.ATM_P_bar)*1000)*0.75006168 
+Line 224: ((float(Pressure)+self.ATM_P_bar)*1000)*0.75006168
+
+Showing pressure in 3 units. plot in Torr:
+![Fig4](https://github.com/IseeJ/TempGUI/blob/main/Screenshot4.png?raw=true)
+
 
 - Writing commands: self.ser.write(b'[command]\r\n')
 
