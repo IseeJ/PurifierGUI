@@ -65,6 +65,7 @@ Showing pressure in 3 units. plot in Torr:
 - Commands:
     - check unit: U,?
     - set unit: U,psi U,atm U,bar U,kPa
+    - calibration Cal,n
 
 
 ### 2. Humidity Logger ###
