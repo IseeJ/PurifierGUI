@@ -42,6 +42,20 @@ To ensure the data is being recorded properly, both logging and start/stop butto
 
 ## Additional Information for debugging ##
 
+### Atlas EZO sensors ###
+connections from sensor → Board
+
+White: RX → TX-O
+
+Green: TX → RX-I
+
+Black: GND → GND
+
+Red: VCC → 3.3V
+
+Blue: Auto → N/C
+
+
 ### 1. Pressure Logger ###
 [EZO-PRS™ Embedded Pressure Sensor](https://atlas-scientific.com/product/pressure-sensor/)
 
