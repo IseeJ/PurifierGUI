@@ -13,8 +13,8 @@ Open powershell from Anaconda navigator
 $cd .\Desktop\TempGUI\GUIfinal\
 $python .\GUIfinal.py
 ```
-![Fig1](https://github.com/IseeJ/TempGUI/blob/main/Screenshot1.png?raw=true)
-![Fig2](https://github.com/IseeJ/TempGUI/blob/main/Screenshot0.png?raw=true)
+![Fig1](https://github.com/IseeJ/TempGUI/blob/main/images/Screenshot1.png?raw=true)
+![Fig2](https://github.com/IseeJ/TempGUI/blob/main/images/Screenshot2.png?raw=true)
 
 ## Connecting Serial Communications and Logging data ##
 
@@ -35,7 +35,7 @@ To log data:
 
 To ensure the data is being recorded properly, both logging and start/stop button must be green as shown in screenshot below
 
-![Fig3](https://github.com/IseeJ/TempGUI/blob/main/Screenshot3.png?raw=true)
+![Fig3](https://github.com/IseeJ/TempGUI/blob/main/images/Screenshot3.png?raw=true)
 
 
 
@@ -57,7 +57,7 @@ conversion fo mbar then to Torr
 Line 224: ((float(Pressure)+self.ATM_P_bar)*1000)*0.75006168
 
 Showing pressure in 3 units. plot in Torr:
-![Fig4](https://github.com/IseeJ/TempGUI/blob/main/Screenshot4.png?raw=true)
+![Fig4](https://github.com/IseeJ/TempGUI/blob/main/images/Screenshot4.png?raw=true)
 
 
 - Writing commands: self.ser.write(b'[command]\r\n')
