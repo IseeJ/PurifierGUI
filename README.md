@@ -3,6 +3,8 @@ GUI for temperature and humidity monitoring in LAr purifier (for Temperature log
 
 Updated on 7/18/24: Use the **GUIfinal.py** with **TabWindow.py**
 
+Updated on 7/22/24: Converting gauge pressure to absolute pressure, Configure default unit to be kPa (
+
 On the PC:
 
 Open powershell from Anaconda navigator
@@ -48,6 +50,8 @@ psi (0 – 74.000) Default, atm (0 – 5.03), bar (0 – 5.102), kPa (0 – 510.
 Only read gauge pressure (relative to atmospheric pressure)
 
 Conversion: $P_{abs} = P_{gauge} + P_{atm}$
+
+$P_{atm} = 14.969 psi = 1 atm = 1.01325 bar = 101.325 kPa
 
 - Writing commands: self.ser.write(b'[command]\r\n')
 
