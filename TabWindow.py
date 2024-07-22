@@ -67,7 +67,7 @@ class Ui_MainWindow(object):
         
         self.LogBothButton = QtWidgets.QPushButton(self.tab1)
         self.LogBothButton.setObjectName("LogBothButton")
-        self.LogBothButton.setText("Log Both")
+        self.LogBothButton.setText("Log All")
         #self.LogBothButton.setMinimumSize(QtCore.QSize(200, 16777215)) 
         self.mainsetup_1.addWidget(self.LogBothButton)
 
@@ -279,10 +279,23 @@ class Ui_MainWindow(object):
         self.mainsetup_2.setObjectName("setupLayout")
 
         self.Presslabel = QtWidgets.QLabel(self.DiagramWidget)
-        self.Presslabel.setText("P: -- psi")
+        self.Presslabel.setText("P: -- Torr")
         self.Presslabel.setStyleSheet(f"font-weight: bold; font-size: 14px; color: black; background-color: rgb{(152, 245, 249)}; border: 1px solid black;")
         self.Presslabel.setMinimumSize(140, 30)
         self.mainsetup_2.addWidget(self.Presslabel)
+
+        self.Presslabel2 = QtWidgets.QLabel(self.DiagramWidget)
+        self.Presslabel2.setText("P: -- mbar")
+        self.Presslabel2.setStyleSheet(f"font-weight: bold; font-size: 14px; color: black; background-color: white; border: 1px solid black;")
+        self.Presslabel2.setMinimumSize(140, 30)
+        self.mainsetup_2.addWidget(self.Presslabel2)
+
+        self.Presslabel3 = QtWidgets.QLabel(self.DiagramWidget)
+        self.Presslabel3.setText("P: -- atm")
+        self.Presslabel3.setStyleSheet(f"font-weight: bold; font-size: 14px; color: black; background-color: white; border: 1px solid black;")
+        self.Presslabel3.setMinimumSize(140, 30)
+        self.mainsetup_2.addWidget(self.Presslabel3)
+        
 
         self.PressclearButton = QtWidgets.QPushButton(self.tab2)
         self.PressclearButton.setObjectName("PressclearButton")
@@ -310,6 +323,7 @@ class Ui_MainWindow(object):
         self.PresssaveDirectoryButton.setText("File Directory")
         self.mainsetup_2.addWidget(self.PresssaveDirectoryButton)
 
+        
         self.intervalInput_2 = QtWidgets.QLineEdit(self.tab2)
         self.intervalInput_2.setObjectName("intervalInput")
         self.intervalInput_2.setPlaceholderText("Logging Interval (s)")
