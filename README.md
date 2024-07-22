@@ -53,8 +53,12 @@ Conversion: $P_{abs} = P_{gauge} + P_{atm}$
 
 $P_{atm}$ = 14.969 psi = 1 atm = 1.01325 bar = 101.325 kPa
 
-conversion fo mbar then to Torr
-Line 226: self.latest_reading = ((Pressure_bar+self.ATM_P_bar)*1000)*0.75006168
+conversion to bar then to Torr
+
+'''
+Line 225: Pressure_bar = float(Pressure)*0.06894757 #convert psi to bar
+Line 226: self.latest_reading = ((Pressure_bar+self.ATM_P_bar)*750.061683
+'''
 
 Showing pressure in 3 units. plot in Torr:
 ![Fig4](https://github.com/IseeJ/TempGUI/blob/main/images/Screenshot4.png?raw=true)
