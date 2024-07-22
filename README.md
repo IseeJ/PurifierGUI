@@ -51,7 +51,7 @@ Only read gauge pressure (relative to atmospheric pressure)
 
 Conversion: $P_{abs} = P_{gauge} + P_{atm}$
 
-$P_{atm} = 14.969 psi = 1 atm = 1.01325 bar = 101.325 kPa
+$P_{atm}$ = 14.969 psi = 1 atm = 1.01325 bar = 101.325 kPa
 
 conversion fo mbar then to Torr
 Line 224: ((float(Pressure)+self.ATM_P_bar)*1000)*0.75006168 
