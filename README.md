@@ -45,6 +45,8 @@ To ensure the data is being recorded properly, both logging and start/stop butto
 
 psi (0 – 74.000) Default, atm (0 – 5.03), bar (0 – 5.102), kPa (0 – 510.212)
 
+Only read gauge pressure (relative to atmospheric pressure)
+
 - Writing commands: self.ser.write(b'[command]\r\n')
 
 - Commands:
