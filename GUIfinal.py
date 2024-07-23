@@ -205,8 +205,8 @@ class Pressure_Worker(QThread):
             self.ser3 = serial.Serial(self.port, self.baud, parity='N', stopbits=1, bytesize=8, timeout=10000)
             self.ser3.write(b'U,psi\r\n') #set unit to psi (default)
             self.ser3.write(b'U,?\r\n') #what is the current unit
-            self.ser3.write(b'Cal,0\r\n') #low point calibration in psi
-            #self.ser3.write(b'Cal,clear\r\n') #uncomment to clear calibration to factory setting
+            #self.ser3.write(b'Cal,0\r\n') #low point calibration in psi, uncomment to get 760 Torr at normal condition (sensor detached from vacuum system)
+            self.ser3.write(b'Cal,clear\r\n') #uncomment to clear calibration to factory setting
             while self.is_running3:
                 now_time = dt.datetime.now()
                 timestamp = str(now_time.strftime('%Y%m%dT%H%M%S.%f')[:-3])  
