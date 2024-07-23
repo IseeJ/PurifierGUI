@@ -83,7 +83,7 @@ Showing pressure in 3 units. plot in Torr:
 - Commands:
     - check unit: U,?
     - set unit: U,psi U,atm U,bar U,kPa
-    - Low point calibration in psi: Cal,0 (before cal: reads 855 Torr at atm, after cal: reads 760 Torr at atm)
+    - Low point calibration in psi: Cal,0 (before cal: reads 855 Torr at atm, after cal: reads 760 Torr at atm) *7/23/24 edit: reset calibration (use the Hornet gauge s ref which reads 871 Torr)*
     - Restore calibration to factory setting: Cal,clear
       
 
