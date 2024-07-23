@@ -185,7 +185,7 @@ class Temp_Worker(QThread):
 
 #pressure
 class Pressure_Worker(QThread):
-    result = pyqtSignal(str, float)
+    result = pyqtSignal(str, float, float)
     def __init__(self, port, interval, baud):
         super().__init__()
         self.ser3 = None
@@ -219,10 +219,10 @@ class Pressure_Worker(QThread):
                         self.sensor_string_complete = True
 
                 if self.sensor_string_complete:
-                    Pressure = self.sensor_string.strip()
+                    Pressure_psi = self.sensor_string.strip()
                     if self.sensor_string[0].isdigit():
                         #conver gauge pressure to absolute pressure
-                        Pressure_bar = float(Pressure)*0.06894757 #convert psi to bar
+                        Pressure_bar = float(Pressure_psi)*0.06894757 #convert psi to bar
                         self.latest_reading = (Pressure_bar+self.ATM_P_bar)*750.061683 #convert to Torr
                     else:
                         print(self.sensor_string)
@@ -234,10 +234,10 @@ class Pressure_Worker(QThread):
                     
                 if now_time - self.last_emit_time >= dt.timedelta(seconds=self.interval):
                     if self.latest_reading:
-                        self.result.emit(timestamp, self.latest_reading)
+                        self.result.emit(timestamp, float(Pressure_psi), self.latest_reading)
                         #print(timestamp, self.latest_reading)
                     else:
-                        self.result.emit(timestamp, np.nan)
+                        self.result.emit(timestamp, np.nan, np.nan)
                     self.last_emit_time = now_time
 
         except serial.SerialException as e:
@@ -292,25 +292,29 @@ class PressureModel(QObject):
     def __init__(self, parent=None):
         super(PressureModel, self).__init__(parent)
         self.Press_time = []
+        self.Press_raw = []
         self.Press_data = []
     def lenData(self, parent=QModelIndex()):
         return len(self.Press_data)
         
-    def appendData(self, time, pres):
+    def appendData(self, time, press_psi, press_torr):
         self.Press_time.append(time)
-        self.Press_data.append(pres)
+        self.Press_raw.append(press_psi)
+        self.Press_data.append(press_torr)
         self.dataChanged.emit()
 
     def clearData(self):
         self.Press_time = []
+        self.Press_raw = []
         self.Press_data = []
         self.dataChanged.emit()
 
     def getData(self):
-        return self.Press_time, self.Press_data
+        return self.Press_time, self.Press_raw, self.Press_data
         
     def reset(self):
         self.Press_time = []
+        self.Press_raw = []
         self.Press_data = []
         return None
 
@@ -475,7 +479,7 @@ class MainWindow(QMainWindow):
         try:
             with open(f"{self.PresssaveDirectory}/{self.Pressfilename}", 'w', newline='') as file:
                 writer = csv.writer(file)
-                writer.writerow(['Time', 'Pressure (Torr)'])
+                writer.writerow(['Time', 'Pressure Reading (psi)', 'Pressure (Torr)'])
         except Exception as e:
             print(f"Error opening file: {e}")
 
@@ -915,35 +919,35 @@ class MainWindow(QMainWindow):
             print(f"Error writing to file: {e}")
 
     #PRESSURE slot
-    @pyqtSlot(str, float)
-    def Pressupdate(self, timestamp, Pressure):
-        if Pressure != 'err':
-            self.ui.Presslabel.setText(f"P: {Pressure:.3f} Torr")
-            self.ui.Presslabel2.setText(f"{Pressure/0.75006169:.3f} mbar")
-            self.ui.Presslabel3.setText(f"{Pressure*0.00131579:.3f} atm")
+    @pyqtSlot(str, float, float)
+    def Pressupdate(self, timestamp, Pressure_psi, Pressure_torr):
+        if Pressure_torr != 'err':
+            self.ui.Presslabel.setText(f"P: {Pressure_torr:.3f} Torr")
+            self.ui.Presslabel2.setText(f"{Pressure_torr/0.75006169:.3f} mbar")
+            self.ui.Presslabel3.setText(f"{Pressure_torr*0.00131579:.3f} atm")
         else:
             self.ui.Presslabel.setText(f"P: err")
 
         formattime = dt.datetime.strptime(timestamp, '%Y%m%dT%H%M%S.%f').timestamp()
-        print(f"Pressure = {timestamp}: {Pressure}")
+        print(f"Pressure = {timestamp}: {Pressure_torr} Torr")
         #model?? seems like I've not been using model
         #self.Presstime.append(formattime)
         #self.Pressdata.append(Pressure)
         #self.PressPlot.setData(self.Presstime, self.Pressdata)
         #append data to model instead of storing in a list in mainwindow
-        self.pressure_model.appendData(formattime, Pressure)
+        self.pressure_model.appendData(formattime, Pressure_psi, Pressure_torr)
         #get data from model
-        Press_time, Press_data = self.pressure_model.getData()
-        self.PressPlot.setData(Press_time, Press_data)
+        Press_time, Press_raw, Press_torr = self.pressure_model.getData()
+        self.PressPlot.setData(Press_time, Press_torr)
 
         if self.Pressfilename:
-            self.PressLogData(timestamp, Pressure)
+            self.PressLogData(timestamp, Pressure_psi, Pressure_torr)
             
-    def PressLogData(self, timestamp, Pressure):
+    def PressLogData(self, timestamp, Press_raw, Pres_torr):
         try:
             with open(f"{self.PresssaveDirectory}/{self.Pressfilename}", 'a', newline='') as file:
                 writer = csv.writer(file)
-                writer.writerow([timestamp, Pressure])
+                writer.writerow([timestamp, Press_raw, Pres_torr])
                 file.flush()
         except Exception as e:
             print(f"Error writing to file: {e}")
