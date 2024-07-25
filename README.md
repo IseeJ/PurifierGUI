@@ -10,8 +10,10 @@ On the PC:
 Open powershell from Anaconda navigator
 
 ```
-$cd .\Desktop\TempGUI\GUIfinal\
-$python .\GUIfinal.py
+cd .\Desktop\TempGUI\GUIfinal\
+```
+```
+python .\GUIfinal.py
 ```
 ![Fig1](https://github.com/IseeJ/TempGUI/blob/main/images/Screenshot1.png?raw=true)
 ![Fig2](https://github.com/IseeJ/TempGUI/blob/main/images/Screenshot7.png?raw=true)
