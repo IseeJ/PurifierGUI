@@ -127,7 +127,7 @@ when RH is Relative Humidity in % and T is Temperature in degree Celsius
 
 #### AH to ppm ####
 ...
-*I haven't figured out the conversion yet, but to retrieve the Ah and Pressure value you can obtain data from model (humidity and pressure data are stored in separated models)
+*I haven't figured out the conversion yet, but to retrieve the AH, temperature, and Pressure value you can obtain data from model (humidity and pressure data are stored in separated models)
 ```
 HUM_time, RH_val,TMP_val,AH_val,DEW_val = self.humidity_model.getData()
 Press_time, Press_raw, Press_torr = self.pressure_model.getData()
