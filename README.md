@@ -132,3 +132,18 @@ when RH is Relative Humidity in % and T is Temperature in degree Celsius
 HUM_time, RH_val,TMP_val,AH_val,DEW_val = self.humidity_model.getData()
 Press_time, Press_raw, Press_torr = self.pressure_model.getData()
 ```
+
+- - - -
+### Code structure ###
+
+There are 3 worker threads: 
+- Temperature (T1-T8 thermocouples): write commands, read and emits time and 8 temperatures in tuples
+- Humidity (RH, Output Temperature, Dew point): emit time and 4 values where Absolute humidity is calculated from RH and Temperature
+- Pressure (pressure): emit time and pressure value in psi (raw reading) and torr (calculated)
+
+There are 3 models to store, handle corresponding data emitted
+
+Worker threads handle serial communications, emits data to connected pyqtSlot through self.worker.result.connect(self.updatefunction)
+
+The update function store data in the model and plots them out
+  
