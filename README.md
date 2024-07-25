@@ -72,8 +72,8 @@ $P_{atm}$ = 14.969 psi = 1 atm = 1.01325 bar = 101.325 kPa
 conversion to bar then to Torr
 
 ```
-Line 225: Pressure_bar = float(Pressure)*0.06894757 #convert psi to bar
-Line 226: self.latest_reading = ((Pressure_bar+self.ATM_P_bar)*750.061683 #Pressure in Torr displayed on plot
+Line 224: Pressure_bar = float(Pressure_psi)*0.06894757 #convert psi to bar
+Line 225: self.latest_reading = (Pressure_bar+self.ATM_P_bar)*750.061683 #convert to Torr
 ```
 
 Showing pressure in 3 units. plot in Torr:
