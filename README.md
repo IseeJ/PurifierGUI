@@ -73,7 +73,7 @@ conversion to bar then to Torr
 
 ```
 Line 225: Pressure_bar = float(Pressure)*0.06894757 #convert psi to bar
-Line 226: self.latest_reading = ((Pressure_bar+self.ATM_P_bar)*750.061683
+Line 226: self.latest_reading = ((Pressure_bar+self.ATM_P_bar)*750.061683 #Pressure in Torr displayed on plot
 ```
 
 Showing pressure in 3 units. plot in Torr:
