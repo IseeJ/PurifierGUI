@@ -39,11 +39,11 @@ python .\GUIfinal.py
 
 3. Choose logging interval (default is 2 seconds)
 
-4. Press 'Start/Stop' to start plotting
+4. Press 'Start/Stop' to start plotting *Data is not recorded yet, this is just to initialize the serial communication and let it run for a few seconds before we start logging data (first few readings for atlas sensors are* *OK *which are just confirming the status, setup, etc.*
 
-To log data:
+To start logging data:
 
-5. Choose 'File Directory' for both Temp, Hum
+5. Choose 'File Directory' for both Temp, Hum, and Pressure *Make sure save directory are set for all three!*
 
 6. Press 'Log All' to start logging data as csv files
 
