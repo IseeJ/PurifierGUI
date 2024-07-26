@@ -6,12 +6,17 @@ GUI for temperature and humidity monitoring in LAr purifier (for Temperature log
 *Updated on 7/22/24: Converting gauge pressure to absolute pressure, Configure default unit to be psi and plot the conversion to Torr, calibrate the low point psi*
 
 On the PC:
-
-Open powershell from Anaconda navigator
+1. click on the taskbar 'Search'
+2. Open Anaconda Navigator
+3. Open Jupyter notebook from Anaconda Navigator
+4. Open powershell from Anaconda Navigator
+5. Type in the command to get into the directory where the python code is
 
 ```
 cd .\Desktop\TempGUI\GUIfinal\
 ```
+6. Run the python code for GUI
+   
 ```
 python .\GUIfinal.py
 ```
