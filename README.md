@@ -14,8 +14,9 @@ pip install pyserial
 ```
 
 # Sensor pins connections:
-
+- For Atlas sensors (Humidity, Pressure)
 ![Fig6](https://github.com/IseeJ/TempGUI/blob/main/images/Screenshot6.png?raw=true)
+- For Temperature sensor: 
 
 # Instruction to run GUI on the PC:
 1. Click on the taskbar 'Search'
@@ -123,6 +124,7 @@ Showing pressure in 3 units. plot in Torr:
 
 
 ### 3. Temperature Logger ###
+[8 Channel Handheld Thermocouple Thermometer/Data Logger](https://www.omega.com/en-us/test-inspection/handheld-meters/temperature-and-humidity-and-dew-point-meters/p/OM-HL-EH-TC-Series)
 #### notes on connection ####
 Power on the device before plugging in otherwise serial port won't be recognized.
 
@@ -156,6 +158,7 @@ Press_time, Press_raw, Press_torr = self.pressure_model.getData()
 
 There are 3 worker threads: 
 - Temperature (T1-T8 thermocouples): write commands, read and emits time and 8 temperatures in tuples
+   - logs time, T1-T8 temperature in degrees celsius
 - Humidity (RH, Output Temperature, Dew point): emit time and 4 values where Absolute humidity is calculated from RH and Temperature
 - Pressure (pressure): emit time and pressure value in psi (raw reading) and torr (calculated)
 
@@ -163,5 +166,5 @@ There are 3 models to store, handle corresponding data emitted
 
 Worker threads handle serial communications, emits data to connected pyqtSlot through self.worker.result.connect(self.updatefunction)
 
-The update function store data in the model and plots them out
+The update function store data in the model and plots them out and logs (appends) to .csv file
   
