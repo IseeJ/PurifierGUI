@@ -43,7 +43,7 @@ python .\GUIfinal.py
 
 2. Choose Baudrate (default for Temp = 38400, Hum = 9600, Pressure = 9600)
 
-3. Choose logging interval (default is 2 seconds)
+3. Choose logging interval (default is 2 seconds, minimum is 1 second (Atlas sensors transmit readings every 1 second))
 
 4. Press 'Start/Stop' to start plotting *Data is not recorded yet, this is just to initialize the serial communication and let it run for a few seconds before we start logging data (first few readings for atlas sensors are* *OK *which are just confirming the status, setup, etc.*
 
