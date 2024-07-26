@@ -13,6 +13,10 @@ pip install pyqtgraph
 pip install pyserial
 ```
 
+# Sensor pins connections:
+
+![Fig6](https://github.com/IseeJ/TempGUI/blob/main/images/Screenshot6.png?raw=true)
+
 # Instruction to run GUI on the PC:
 1. Click on the taskbar 'Search'
 2. Open Anaconda Navigator
