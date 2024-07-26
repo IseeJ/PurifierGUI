@@ -19,6 +19,7 @@ python .\GUIfinal.py
 ![Fig2](https://github.com/IseeJ/TempGUI/blob/main/images/Screenshot7.png?raw=true)
 
 # Required Packages
+already installed, if error messages pop up, pip install again
 ```
 pip install pyqt5
 pip install pyqt5-tools
