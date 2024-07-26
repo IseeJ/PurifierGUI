@@ -5,8 +5,6 @@ GUI for temperature and humidity monitoring in LAr purifier (for Temperature log
 
 *Updated on 7/22/24: Converting gauge pressure to absolute pressure, Configure default unit to be psi and plot the conversion to Torr, calibrate the low point psi*
 
-*Full instruction [Notebook](https://docs.google.com/presentation/d/1uNMxAkqv4WHF2pQ-5r8-RSuGu6VQN3Elu-JLWqGTqH8/edit?usp=sharing)*
-
 # Required Packages
 already installed, if error messages pop up, pip install again
 ```
