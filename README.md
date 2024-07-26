@@ -18,6 +18,13 @@ python .\GUIfinal.py
 ![Fig1](https://github.com/IseeJ/TempGUI/blob/main/images/Screenshot1.png?raw=true)
 ![Fig2](https://github.com/IseeJ/TempGUI/blob/main/images/Screenshot7.png?raw=true)
 
+# Required Packages
+```
+pip install pyqt5
+pip install pyqt5-tools
+pip install pyqtgraph
+pip install pyserial
+```
 ## Connecting Serial Communications and Logging data ##
 
 1. Press 'Refresh port' to get most recent port names in the drop down box
