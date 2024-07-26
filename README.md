@@ -15,8 +15,9 @@ pip install pyserial
 
 # Sensor pins connections:
 - For Atlas sensors (Humidity, Pressure)
+- For thermocouples, make sure the setting is on K-type thermocouples and all channels (T1-T8 are connected correctly as labelled)
+
 ![Fig6](https://github.com/IseeJ/TempGUI/blob/main/images/Screenshot6.png?raw=true)
-- For Temperature sensor: 
 
 # Instruction to run GUI on the PC:
 1. Click on the taskbar 'Search'
