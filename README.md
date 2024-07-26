@@ -13,7 +13,7 @@ pip install pyqtgraph
 pip install pyserial
 ```
 
-# Sensor pins connections:
+# Sensors connection setup:
 - For Atlas sensors (Humidity, Pressure)
 - For thermocouples, make sure the setting is on K-type thermocouples and all channels (T1-T8 are connected correctly as labelled)
 
