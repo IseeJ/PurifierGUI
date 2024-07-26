@@ -13,8 +13,8 @@ pip install pyqtgraph
 pip install pyserial
 ```
 
-# Instruction to run on the PC:
-1. click on the taskbar 'Search'
+# Instruction to run GUI on the PC:
+1. Click on the taskbar 'Search'
 2. Open Anaconda Navigator
 3. Open Jupyter notebook from Anaconda Navigator
 4. Open powershell from Anaconda Navigator
@@ -69,6 +69,7 @@ Black: GND → GND
 Red: VCC → 3.3V
 
 Blue: Auto → N/C
+
 
 
 ### 1. Pressure Logger ###
