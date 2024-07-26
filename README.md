@@ -5,7 +5,15 @@ GUI for temperature and humidity monitoring in LAr purifier (for Temperature log
 
 *Updated on 7/22/24: Converting gauge pressure to absolute pressure, Configure default unit to be psi and plot the conversion to Torr, calibrate the low point psi*
 
-On the PC:
+# Required Packages
+already installed, if error messages pop up, pip install again
+```
+pip install pyqt5
+pip install pyqtgraph
+pip install pyserial
+```
+
+# Instruction to run on the PC:
 1. click on the taskbar 'Search'
 2. Open Anaconda Navigator
 3. Open Jupyter notebook from Anaconda Navigator
@@ -23,14 +31,6 @@ python .\GUIfinal.py
 ![Fig1](https://github.com/IseeJ/TempGUI/blob/main/images/Screenshot1.png?raw=true)
 ![Fig2](https://github.com/IseeJ/TempGUI/blob/main/images/Screenshot7.png?raw=true)
 
-# Required Packages
-already installed, if error messages pop up, pip install again
-```
-pip install pyqt5
-pip install pyqt5-tools
-pip install pyqtgraph
-pip install pyserial
-```
 ## Connecting Serial Communications and Logging data ##
 
 1. Press 'Refresh port' to get most recent port names in the drop down box
