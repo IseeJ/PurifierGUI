@@ -43,7 +43,7 @@ class FmtAxisItem(pg.AxisItem):
     def tickStrings(self, values, scale, spacing):
         return [f' {v:.2f}' for v in values]
 
-#Humidity
+#Humidity Atlas EZO-HUM (provides humidity and temperature)
 class Hum_Worker(QThread):
     #add abshum conversion now 4 floats emit
     result = pyqtSignal(str, float, float, float, float)
@@ -62,10 +62,13 @@ class Hum_Worker(QThread):
     #debugging incomplete reading that occurs every 12 readings
     def run(self):
         try:
+            # device defaults are: 9,600 baud, 8 data bits, 1 stop bit, no parity, no flow control
+            # Serial() timeout is in seconds
             self.ser2 = serial.Serial(self.port, self.baud, parity='N', stopbits=1, bytesize=8, timeout=10000)
-            self.ser2.write(b'O,HUM,1\r\n')
-            self.ser2.write(b'O,T,1\r\n')
-            self.ser2.write(b'O,Dew,1\r\n')
+            # FIXME: switch from continuous mode (default) to single-reading mode?
+            self.ser2.write(b'O,HUM,1\r\n') # enable humidity
+            self.ser2.write(b'O,T,1\r\n')   # enable temperature
+            self.ser2.write(b'O,Dew,1\r\n') # enable dewpoint
 
             while self.is_running2:
                 now_time = dt.datetime.now()
@@ -75,20 +78,22 @@ class Hum_Worker(QThread):
                 if self.ser2.in_waiting > 0:
                     inchar = self.ser2.read().decode('utf-8')
                     self.sensor_string += inchar
-                    if inchar == '\r':
+                    if inchar == '\r':  # FIXME: may be problematic if read() gives >1 byte...
                         self.sensor_string_complete = True
 
                 if self.sensor_string_complete:
                     #print(self.sensor_string)
                     parts = self.sensor_string.split(",")
                     if len(parts) == 4:
-                        HUM = float(parts[0].strip())
+                        HUM = float(parts[0].strip())  # FIXME: add protection here (try/except)
                         TMP = float(parts[1].strip())
                         DEW = float(parts[3].strip())
                         #add abshum conversion
                         absHUM = (6.112*np.exp((17.67*TMP)/(TMP+243.5))*HUM*2.1674)/(273.15+TMP)
                         self.latest_reading = (HUM, TMP, DEW, absHUM)
-                    if not self.sensor_string[0].isdigit():
+                        # Can't calculate water vapor content in PPM without pressure reading...
+                        # or can we...? can you get water vapor in ppm from RH, Temperature and Dew Point?!?
+                    if not self.sensor_string[0].isdigit(): # FIXME: ???
                         print(timestamp, self.sensor_string)
 
                     self.sensor_string = ""
@@ -98,6 +103,7 @@ class Hum_Worker(QThread):
                 if now_time - self.last_emit_time >= dt.timedelta(seconds=self.interval):
                     if self.latest_reading:
                         self.result.emit(timestamp, *self.latest_reading)
+                        # FIXME: should we set self.latest_reading=None now?
                     else:
                         self.result.emit(timestamp, np.nan, np.nan, np.nan, np.nan)
                     self.last_emit_time = now_time
@@ -115,7 +121,9 @@ class Hum_Worker(QThread):
         self.quit()
         self.wait()
 
-#temperature
+
+        
+# temperature: Omega OM-HL-EH-TC 8-channel thermocouple data logger
 class Temp_Worker(QThread):
     result = pyqtSignal(str, tuple)
     
@@ -183,7 +191,7 @@ class Temp_Worker(QThread):
 
 
 
-#pressure
+#pressure Atlas EZO-PRS
 class Pressure_Worker(QThread):
     result = pyqtSignal(str, float, float)
     def __init__(self, port, interval, baud):
@@ -202,7 +210,10 @@ class Pressure_Worker(QThread):
     
     def run(self):
         try:
+            # device defaults are: 9,600 baud, 8 data bits, 1 stop bit, no parity, no flow control
+            # Serial() timeout is in seconds
             self.ser3 = serial.Serial(self.port, self.baud, parity='N', stopbits=1, bytesize=8, timeout=10000)
+            # FIXME: switch from continuous mode (default) to single-reading mode?
             self.ser3.write(b'U,psi\r\n') #set unit to psi (default)
             self.ser3.write(b'U,?\r\n') #what is the current unit
             #self.ser3.write(b'Cal,0\r\n') #low point calibration in psi, uncomment to get 760 Torr at normal condition (sensor detached from vacuum system)
@@ -223,6 +234,7 @@ class Pressure_Worker(QThread):
                     if self.sensor_string[0].isdigit():
                         #conver gauge pressure to absolute pressure
                         Pressure_bar = float(Pressure_psi)*0.06894757 #convert psi to bar
+                        # FIXME: this assumes room pressure is 1 atm...
                         self.latest_reading = (Pressure_bar+self.ATM_P_bar)*750.061683 #convert to Torr
                     else:
                         print(self.sensor_string)
@@ -283,6 +295,38 @@ def parse_temp(self, response):
         hex_str = response_hex[34 + i*4:36 + i*4] + response_hex[32 + i*4:34 + i*4]
         temperatures.append(hex_dec(self,hex_str))
     return tuple(temperatures)
+
+
+def wv_PPM(RH, tC, Ptot):
+    # compute the water vapor content in parts per million
+    # RH:   relative humidity in percent
+    # tC:   temperature in celsius
+    # Ptot: total pressure in Pa
+    # RH*p_wsat gives the water vapor partial pressure
+    
+    val = (RH*0.01)*p_wsat_huang_2018(tC)/Ptot # water vapor content
+    return val*1e6  # ppm
+    
+def p_wsat_huang_2018(tC):
+    # calculate saturation water vapor pressure for a given temperature
+    # tC: temperature in celsius
+    # returns: saturation vapor pressure in Pascals [Pa]
+    # 
+    # from Huang, 2018
+    # A Simple Accurate Formula for Calculating Saturation Vapor Pressure of Water and Ice
+    # Jianhua Huang
+    # Journal of Applied Meteorology and Climatology, June 2018, Vol. 57, No. 6
+    # (June 2018), pp. 1265-1272
+    # Published by: American Meteorological Society
+    # Stable URL: https://www.jstor.org/stable/10.2307/26500764
+    # https://www.jstor.org/stable/26500764?seq=4
+
+    # FIXME: modify to be able to handle arrays where some elements have tC < 0 and others > 0 
+    if tC > 0:
+        pws = np.exp(34.494 - 4924.99/(tC+237.1)) / np.power(tC+105, 1.57)
+    else:
+        pws = np.exp(43.494 - 6545.8/(tC+278)) / np.power(tC+868, 2)
+    return pws
 
 
 #to store pressure data
@@ -363,22 +407,27 @@ class HumidityModel(QObject):
         self.TMP_val = []
         self.AH_val = []
         self.DEW_val = []
+        self.PPM_val = []
 
     def lenData(self, parent=QModelIndex()):
         return len(self.data)
         
     #add abshum
-    def appendData(self, time, hum, tmp, dew, abshum):
+    def appendData(self, time, hum, tmp, dew, abshum, ppm):
         self.HUM_time.append(time)
         self.RH_val.append(hum)
         self.TMP_val.append(tmp)
-        self.AH_val.append(dew)
-        self.DEW_val.append(abshum)
+        self.DEW_val.append(dew)
+        self.AH_val.append(abshum)
+        # FIXME: these are flipped!
+        #self.AH_val.append(dew)
+        #self.DEW_val.append(abshum)
+        self.PPM_val.append(ppm)
         #self.data.append((time, hum, tmp, dew, abshum))
         self.dataChanged.emit()
 
     def getData(self):
-        return self.HUM_time, self.RH_val,self.TMP_val, self.AH_val,self.DEW_val
+        return self.HUM_time, self.RH_val,self.TMP_val, self.AH_val,self.DEW_val,self.PPM_val
 
     def clearData(self):
         self.HUM_time = []
@@ -386,15 +435,17 @@ class HumidityModel(QObject):
         self.TMP_val = []
         self.AH_val = []
         self.DEW_val = []
+        self.PPM_val = []
         #self.data = []
         self.dataChanged.emit()
 
-    def reset(self):
+    def reset(self):  # FIXME: why both reset() and clearData()?
         self.HUM_time = []
         self.RH_val = []
         self.TMP_val = []
         self.AH_val = []
         self.DEW_val = []
+        self.PPM_val = []
         #self.data = []
         return None
 
@@ -434,7 +485,11 @@ class MainWindow(QMainWindow):
         self.ui.HumsaveDirectoryButton.pressed.connect(self.chooseHumSaveDirectory)
         self.ui.PresssaveDirectoryButton.pressed.connect(self.choosePressSaveDirectory)
 
+        # FIXME: should make this change in the UI generator, not here.... (Designer)
+        self.ui.Humlabel4.setText(f"PPM:")
+        self.ui.Humlabel4.setText(f"PPM:")
 
+        
         self.temperature_model = TemperatureModel()
         self.humidity_model = HumidityModel()
         self.pressure_model = PressureModel()
@@ -517,24 +572,29 @@ class MainWindow(QMainWindow):
         self.hum_plot = self.ui.graphics_layout.addPlot(row=0, col=0)
         self.tmp_plot = self.ui.graphics_layout.addPlot(row=1, col=0)
         self.dew_plot = self.ui.graphics_layout.addPlot(row=2, col=0)
+        #self.abshum_plot = self.ui.graphics_layout.addPlot(row=3, col=0)
         
         self.dew_plot.setLabel('bottom', 'Time', **styles)
         self.hum_plot.getAxis('bottom').setStyle(tickTextOffset=10)
 
         self.tmp_plot.getAxis('bottom').setStyle(tickTextOffset=10)
         self.dew_plot.getAxis('bottom').setStyle(tickTextOffset=10)
+        #self.abshum_plot.getAxis('bottom').setStyle(tickTextOffset=10)
 
         self.hum_plot.setAxisItems({'bottom': TimeAxisItem(orientation='bottom')})
         self.tmp_plot.setAxisItems({'bottom': TimeAxisItem(orientation='bottom')})
         self.dew_plot.setAxisItems({'bottom': DateAxisItem(orientation='bottom')})
+        #self.abshum_plot.setAxisItems({'bottom': TimeAxisItem(orientation='bottom')})
 
         self.hum_plot.setAxisItems({'left': FmtAxisItem(orientation='left')})
         self.tmp_plot.setAxisItems({'left': FmtAxisItem(orientation='left')})
         self.dew_plot.setAxisItems({'left': FmtAxisItem(orientation='left')})
+        #self.abshum_plot.setAxisItems({'left': FmtAxisItem(orientation='left')})
 
         self.hum_plot.setLabel('left', text='<span style="color: #be1111;">RH(%)</span>')
         self.tmp_plot.setLabel('left', text='<span style="color: #00b8f5;">TMP(°C)</span>')
         self.dew_plot.setLabel('left',text='<span style="color: #000000;">DEW(°C)</span>')
+        #self.abshum_plot.setLabel('left', text='<span style="color: #be1111;">AHUM(g/cm3)</span>')
         
         """
         self.hum_time = []
@@ -549,6 +609,7 @@ class MainWindow(QMainWindow):
         self.hum_plotLines['HUM'] = self.hum_plot.plot([],[], pen=pg.mkPen(color=(190, 17, 17), width=2), name='HUM')
         self.hum_plotLines['TMP'] = self.tmp_plot.plot([],[], pen=pg.mkPen(color=(0, 184, 245), width=2), name='TMP')
         self.hum_plotLines['DEW'] = self.dew_plot.plot([],[], pen=pg.mkPen(color=(0,0,0), width=2), name='DEW')
+        #self.hum_plotLines['ABSHUM'] = self.abshum_plot.plot([],[], pen=pg.mkPen(color=(190, 17, 17), width=2), name='ABSHUM')
 
          
 
@@ -566,9 +627,9 @@ class MainWindow(QMainWindow):
         self.ui.HumPlotWidget2.getAxis('bottom').setStyle(tickTextOffset=10)
         self.ui.HumPlotWidget2.setAxisItems({'bottom': DateAxisItem(orientation='bottom')})
 
-        self.ui.HumPlotWidget2.setLabel("left", "Absolute Humidity (g/m3)", **{"color": "blue", "font-size": "18px"})
-        #self.hum_plot = self.ui.HumPlotWidget2.plot(self.hum_time, self.hum_data['absHUM'], pen=pg.mkPen(color='b', width=2), name="absHUM")
-        self.hum_plot = self.ui.HumPlotWidget2.plot([],[], pen=pg.mkPen(color='b', width=2), name="absHUM")
+        self.ui.HumPlotWidget2.setLabel("left", "Water vapor (ppm)", **{"color": "blue", "font-size": "18px"})
+        #self.ui.HumPlotWidget2.setLabel("left", "Absolute Humidity (g/m3)", **{"color": "blue", "font-size": "18px"})
+        ##self.hum_plot = self.ui.HumPlotWidget2.plot(self.hum_time, self.hum_data['absHUM'], pen=pg.mkPen(color='b', width=2), name="absHUM")
         self.ui.HumPlotWidget2.setLabel("right", "Output Temperature (°C)", **{"color": "red", "font-size": "18px"})
         #self.temp_plot = pg.PlotDataItem(self.time, self.data[7], pen=pg.mkPen(color='r', width=2), name="T8")
         self.temp_plot = pg.PlotDataItem([], [], pen=pg.mkPen(color='r', width=2), name="T8")
@@ -705,49 +766,49 @@ class MainWindow(QMainWindow):
             self.worker2 = None
             self.worker3 = None
     
-    def startRunTwo(self):
-        self.serialPort = self.ui.TempPortBox.currentText()
-        self.baud = int(self.ui.TempBaudBox.currentText())
-
-        self.serialPort2 = self.ui.HumPortBox.currentText()
-        self.baud2 = int(self.ui.HumBaudBox.currentText())
-        
-        if 'COM' not in self.serialPort:
-            self.serialPort = "/dev/" + self.ui.TempPortBox.currentText()
-        if 'COM' not in self.serialPort2:
-            self.serialPort2 = "/dev/" + self.ui.HumPortBox.currentText()
-            
-        print(f"Connected to Tmp: {self.serialPort}")
-        #print(f"Set Tmp baud rate to: {self.baud}")
-        print(f"Connected to Hum: {self.serialPort2}")
-        #print(f"Set Hum baud rate to: {self.baud2}")
-        
-        
-        if self.serialPort is None:
-            print(self, "No port selected")
-            return
-            
-        try:
-            self.interval = int(self.ui.intervalInput.text())
-            print(f"Using input interval: {self.interval} seconds")
-        except ValueError:
-            print("Using default interval: 2 seconds")
-            self.interval = 2
-
-        try:
-            self.worker1 = Temp_Worker(self.serialPort, self.interval, self.baud)
-            self.worker1.result.connect(self.updateTemp)
-            self.worker1.start()
-            print("Starting Temp_Worker")
-
-            self.worker2 = Hum_Worker(self.serialPort2, self.interval, self.baud2)
-            self.worker2.result.connect(self.updateHum)
-            self.worker2.start()
-            print("Starting Hum_Worker")
-            
-        except serial.SerialException as e:
-            print(f"Could not open serial port: {e}")
-            self.worker1 = None
+    #def startRunTwo(self):
+    #    self.serialPort = self.ui.TempPortBox.currentText()
+    #    self.baud = int(self.ui.TempBaudBox.currentText())
+    #
+    #    self.serialPort2 = self.ui.HumPortBox.currentText()
+    #    self.baud2 = int(self.ui.HumBaudBox.currentText())
+    #    
+    #    if 'COM' not in self.serialPort:
+    #        self.serialPort = "/dev/" + self.ui.TempPortBox.currentText()
+    #    if 'COM' not in self.serialPort2:
+    #        self.serialPort2 = "/dev/" + self.ui.HumPortBox.currentText()
+    #        
+    #    print(f"Connected to Tmp: {self.serialPort}")
+    #    #print(f"Set Tmp baud rate to: {self.baud}")
+    #    print(f"Connected to Hum: {self.serialPort2}")
+    #    #print(f"Set Hum baud rate to: {self.baud2}")
+    #    
+    #    
+    #    if self.serialPort is None:
+    #        print(self, "No port selected")
+    #        return
+    #        
+    #    try:
+    #        self.interval = int(self.ui.intervalInput.text())
+    #        print(f"Using input interval: {self.interval} seconds")
+    #    except ValueError:
+    #        print("Using default interval: 2 seconds")
+    #        self.interval = 2
+    #
+    #    try:
+    #        self.worker1 = Temp_Worker(self.serialPort, self.interval, self.baud)
+    #        self.worker1.result.connect(self.updateTemp)
+    #        self.worker1.start()
+    #        print("Starting Temp_Worker")
+    #
+    #        self.worker2 = Hum_Worker(self.serialPort2, self.interval, self.baud2)
+    #        self.worker2.result.connect(self.updateHum)
+    #        self.worker2.start()
+    #        print("Starting Hum_Worker")
+    #        
+    #    except serial.SerialException as e:
+    #        print(f"Could not open serial port: {e}")
+    #        self.worker1 = None
 
     def stopRun(self):
         if self.worker1:
@@ -881,19 +942,37 @@ class MainWindow(QMainWindow):
     @pyqtSlot(str, float, float, float, float)
     
     def updateHum(self, timestamp, HUM, TMP, DEW, absHUM):
-        print(f"Humudity = {timestamp}: RH: {HUM}, TMP: {TMP}, DEW: {DEW}, AH: {absHUM:.2f}")
+
+        # compute water vapor content in ppm from RH, Temperature and pressure
+        _, __, pressuresTorr = self.pressure_model.getData()
+        if len(pressuresTorr) > 0:
+            Ptot = pressuresTorr[-1]
+        else:
+            print('no pressures...')
+            Ptot = 101325.0 # Pascals (dummy value... no measured data yet...)
+        PPM = wv_PPM(HUM, TMP, Ptot)
+
+        #print(f"Humudity = {timestamp}: RH: {HUM}, TMP: {TMP}, DEW: {DEW}, AH: {absHUM:.2f}")
+        print(f"Humidity = {timestamp}: RH: {HUM}, TMP: {TMP}, DEW: {DEW}, AH: {absHUM:.2f}")
+        print(f"     wv_PPM: {PPM}")
         self.ui.Humlabel1.setText(f"RH: {HUM:.2f}")
         self.ui.Humlabel2.setText(f"Tmp: {TMP:.2f}")
         self.ui.Humlabel3.setText(f"Dew: {DEW:.2f}")
-        self.ui.Humlabel4.setText(f"AH: {absHUM:.2f}")
+        #self.ui.Humlabel4.setText(f"AH: {absHUM:.2f}")
+        self.ui.Humlabel4.setText(f"PPM: {PPM:.2f}")
         formattime = dt.datetime.strptime(timestamp, '%Y%m%dT%H%M%S.%f').timestamp()
 
-        self.humidity_model.appendData(formattime, HUM, TMP, DEW, absHUM)
-        HUM_time, RH_val,TMP_val,AH_val,DEW_val = self.humidity_model.getData()
+        self.humidity_model.appendData(formattime, HUM, TMP, DEW, absHUM, PPM)
+        # FIXME: just append a single data point to the plots rather than getting
+        # all data every time?
+        HUM_time, RH_val,TMP_val,AH_val,DEW_val, PPM_val = self.humidity_model.getData()
         self.hum_plotLines['HUM'].setData(HUM_time, RH_val)
         self.hum_plotLines['TMP'].setData(HUM_time, TMP_val)
         self.hum_plotLines['DEW'].setData(HUM_time, DEW_val)
-        self.hum_plot.setData(HUM_time, AH_val)
+        #self.hum_plotLines['ABSHUM'].setData(HUM_time, AH_val)
+        #self.hum_plot.setData(HUM_time, AH_val)
+        # plot water vapor content in ppm
+        self.hum_plot.setData(HUM_time, PPM_val)
 
         """
         self.hum_time.append(formattime)
@@ -907,13 +986,15 @@ class MainWindow(QMainWindow):
         self.hum_plotLines['DEW'].setData(self.hum_time, self.hum_data['DEW'])
         self.hum_plot.setData(self.hum_time, self.hum_data['absHUM'])
         """
+        # FIXME: replace with some isLogging boolean flag...
         if self.Humfilename:
-            self.HumLogData(timestamp, HUM, TMP, DEW, absHUM)
-    def HumLogData(self, timestamp, HUM, TMP, DEW, absHUM):
+            self.HumLogData(timestamp, HUM, TMP, DEW, absHUM, PPM)
+    def HumLogData(self, timestamp, HUM, TMP, DEW, absHUM, PPM):
         try:
+            # FIXME: os.path.join()
             with open(f"{self.HumsaveDirectory}/{self.Humfilename}", 'a', newline='') as file:
                 writer = csv.writer(file)
-                writer.writerow([timestamp, HUM,TMP,DEW, absHUM])
+                writer.writerow([timestamp, HUM,TMP,DEW, absHUM, PPM])
                 file.flush()
         except Exception as e:
             print(f"Error writing to file: {e}")
@@ -945,6 +1026,7 @@ class MainWindow(QMainWindow):
             
     def PressLogData(self, timestamp, Press_raw, Pres_torr):
         try:
+            # FIXME: os.path.join() to be platform independent
             with open(f"{self.PresssaveDirectory}/{self.Pressfilename}", 'a', newline='') as file:
                 writer = csv.writer(file)
                 writer.writerow([timestamp, Press_raw, Pres_torr])
