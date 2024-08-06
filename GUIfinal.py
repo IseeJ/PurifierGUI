@@ -487,8 +487,6 @@ class MainWindow(QMainWindow):
 
         # FIXME: should make this change in the UI generator, not here.... (Designer)
         self.ui.Humlabel4.setText(f"PPM:")
-        self.ui.Humlabel4.setText(f"PPM:")
-
         
         self.temperature_model = TemperatureModel()
         self.humidity_model = HumidityModel()
@@ -572,29 +570,24 @@ class MainWindow(QMainWindow):
         self.hum_plot = self.ui.graphics_layout.addPlot(row=0, col=0)
         self.tmp_plot = self.ui.graphics_layout.addPlot(row=1, col=0)
         self.dew_plot = self.ui.graphics_layout.addPlot(row=2, col=0)
-        #self.abshum_plot = self.ui.graphics_layout.addPlot(row=3, col=0)
         
         self.dew_plot.setLabel('bottom', 'Time', **styles)
         self.hum_plot.getAxis('bottom').setStyle(tickTextOffset=10)
 
         self.tmp_plot.getAxis('bottom').setStyle(tickTextOffset=10)
         self.dew_plot.getAxis('bottom').setStyle(tickTextOffset=10)
-        #self.abshum_plot.getAxis('bottom').setStyle(tickTextOffset=10)
 
         self.hum_plot.setAxisItems({'bottom': TimeAxisItem(orientation='bottom')})
         self.tmp_plot.setAxisItems({'bottom': TimeAxisItem(orientation='bottom')})
         self.dew_plot.setAxisItems({'bottom': DateAxisItem(orientation='bottom')})
-        #self.abshum_plot.setAxisItems({'bottom': TimeAxisItem(orientation='bottom')})
 
         self.hum_plot.setAxisItems({'left': FmtAxisItem(orientation='left')})
         self.tmp_plot.setAxisItems({'left': FmtAxisItem(orientation='left')})
         self.dew_plot.setAxisItems({'left': FmtAxisItem(orientation='left')})
-        #self.abshum_plot.setAxisItems({'left': FmtAxisItem(orientation='left')})
 
         self.hum_plot.setLabel('left', text='<span style="color: #be1111;">RH(%)</span>')
         self.tmp_plot.setLabel('left', text='<span style="color: #00b8f5;">TMP(°C)</span>')
         self.dew_plot.setLabel('left',text='<span style="color: #000000;">DEW(°C)</span>')
-        #self.abshum_plot.setLabel('left', text='<span style="color: #be1111;">AHUM(g/cm3)</span>')
         
         """
         self.hum_time = []
@@ -609,7 +602,6 @@ class MainWindow(QMainWindow):
         self.hum_plotLines['HUM'] = self.hum_plot.plot([],[], pen=pg.mkPen(color=(190, 17, 17), width=2), name='HUM')
         self.hum_plotLines['TMP'] = self.tmp_plot.plot([],[], pen=pg.mkPen(color=(0, 184, 245), width=2), name='TMP')
         self.hum_plotLines['DEW'] = self.dew_plot.plot([],[], pen=pg.mkPen(color=(0,0,0), width=2), name='DEW')
-        #self.hum_plotLines['ABSHUM'] = self.abshum_plot.plot([],[], pen=pg.mkPen(color=(190, 17, 17), width=2), name='ABSHUM')
 
          
 
@@ -629,7 +621,9 @@ class MainWindow(QMainWindow):
 
         self.ui.HumPlotWidget2.setLabel("left", "Water vapor (ppm)", **{"color": "blue", "font-size": "18px"})
         #self.ui.HumPlotWidget2.setLabel("left", "Absolute Humidity (g/m3)", **{"color": "blue", "font-size": "18px"})
-        ##self.hum_plot = self.ui.HumPlotWidget2.plot(self.hum_time, self.hum_data['absHUM'], pen=pg.mkPen(color='b', width=2), name="absHUM")
+        #self.hum_plot = self.ui.HumPlotWidget2.plot(self.hum_time, self.hum_data['absHUM'], pen=pg.mkPen(color='b', width=2), name="absHUM")
+        # FIXME: the name self.hum_plot is already used!!!!!!!!
+        self.hum_plot = self.ui.HumPlotWidget2.plot([],[], pen=pg.mkPen(color='b', width=2), name="wvPPM")
         self.ui.HumPlotWidget2.setLabel("right", "Output Temperature (°C)", **{"color": "red", "font-size": "18px"})
         #self.temp_plot = pg.PlotDataItem(self.time, self.data[7], pen=pg.mkPen(color='r', width=2), name="T8")
         self.temp_plot = pg.PlotDataItem([], [], pen=pg.mkPen(color='r', width=2), name="T8")
@@ -946,7 +940,7 @@ class MainWindow(QMainWindow):
         # compute water vapor content in ppm from RH, Temperature and pressure
         _, __, pressuresTorr = self.pressure_model.getData()
         if len(pressuresTorr) > 0:
-            Ptot = pressuresTorr[-1]
+            Ptot = pressuresTorr[-1]*133.322368 # convert torr to Pascals
         else:
             print('no pressures...')
             Ptot = 101325.0 # Pascals (dummy value... no measured data yet...)
@@ -959,7 +953,7 @@ class MainWindow(QMainWindow):
         self.ui.Humlabel2.setText(f"Tmp: {TMP:.2f}")
         self.ui.Humlabel3.setText(f"Dew: {DEW:.2f}")
         #self.ui.Humlabel4.setText(f"AH: {absHUM:.2f}")
-        self.ui.Humlabel4.setText(f"PPM: {PPM:.2f}")
+        self.ui.Humlabel4.setText(f"PPM: {PPM:.1f}") # FIXME: use integer
         formattime = dt.datetime.strptime(timestamp, '%Y%m%dT%H%M%S.%f').timestamp()
 
         self.humidity_model.appendData(formattime, HUM, TMP, DEW, absHUM, PPM)
