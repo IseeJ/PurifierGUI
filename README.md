@@ -111,7 +111,7 @@ Showing pressure in 3 units. plot in Torr:
 
 
 ### 2. Humidity Logger ###
-[EZO-PRS™ Embedded Pressure Sensor](https://atlas-scientific.com/probes/humidity-probe/)
+[EZO-PRS™ Embedded Humidity Probe](https://atlas-scientific.com/probes/humidity-probe/)
 
 0 – 100% RH
 
