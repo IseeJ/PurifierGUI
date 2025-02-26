@@ -160,15 +160,12 @@ HUM_time, RH_val,TMP_val,AH_val,DEW_val = self.humidity_model.getData()
 Press_time, Press_raw, Press_torr = self.pressure_model.getData()
 ```-->
 
-for $T_C > 0$
+for $T_C > 0$: $P_{sat} = \frac{e^{(34.494 - \frac{4924.99}{T+237.1})}}{(T_C+105)^{1.57}}$
 
-$P_{sat} = \frac{e^{(34.494 - \frac{4924.99}{T+237.1})}}{(T_C+105)^{1.57}}$
+for $T_C < 0$: $P_{sat} = \frac{e^{(43.494 - \frac{6545.8}{T+278})}}{(T_C+868)^{2}}$
 
-for $T_C < 0$
-
-$P_{sat} = \frac{e^{(43.494 - \frac{6545.8}{T+278})}}{(T_C+868)^{2}}$
-
-
+where $T_C$ is the temperature in degrees Celsius measured using the humidity sensor, $P_tot$ is in pascal. The water vapor concentration in parts per million (ppm) is given by Dalton's law of partial pressures, 
+$\frac{10^4\times RH \times P_{sat}}{P_{tot}}$
 
 
 
