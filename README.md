@@ -5,6 +5,12 @@ GUI for temperature and humidity monitoring in LAr purifier (for Temperature log
 
 *Updated on 7/22/24: Converting gauge pressure to absolute pressure, Configure default unit to be psi and plot the conversion to Torr, calibrate the low point psi*
 
+*Updated on 2/26/25: Pressure, Humidity sensors are moved to the Doberman database*
+
+To-do: 
+- resolve serial connection errors (permission denied), add to except --> close, reopen the serial port then, resume
+
+
 # Required Packages
 already installed, if error messages pop up, pip install again
 ```
@@ -140,8 +146,8 @@ where the first 16 bits and last 4 bits are the same in all T readings, the midd
 - - - -
 ### Water vapor concentration ###
 
-#### RH to AH ####
-Absolute Humidity is calcualted using the measured Relative Humidity and Temperature from the EZO-Hum sensor, using the formula:
+#### RH to ppm ####
+<!---Absolute Humidity is calculated using the measured Relative Humidity and Temperature from the EZO-Hum sensor, using the formula:
 $AH = 2.16 \cdot \frac{RH\cdot6.11 e^{\left ( \frac{17.27 \cdot T}{T+273.15-35.86} \right )}}{T+273.15}$
 
 when RH is Relative Humidity in % and T is Temperature in degree Celsius
@@ -152,9 +158,20 @@ when RH is Relative Humidity in % and T is Temperature in degree Celsius
 ```
 HUM_time, RH_val,TMP_val,AH_val,DEW_val = self.humidity_model.getData()
 Press_time, Press_raw, Press_torr = self.pressure_model.getData()
-```
+```-->
 
-- - - -
+for $T_C > 0$
+
+$P_{sat} = \frac{e^{(34.494 - \frac{4924.99}{T+237.1})}}{(T_C+105)^{1.57}}$
+
+for $T_C < 0$
+
+$P_{sat} = \frac{e^{(43.494 - \frac{6545.8}{T+278})}}{(T_C+868)^{2}}$
+
+
+
+
+
 ### Code structure ###
 
 There are 3 worker threads: 
