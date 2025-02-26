@@ -168,6 +168,10 @@ class Temp_Worker(QThread):
 
         except serial.SerialException as e:
             print(f"Serial error: {e}")
+            #to-do: add close, reopen serial port
+            #self.ser.close()
+            #self.ser = serial.Serial(self.port, self.baud, timeout=10000)
+            #run(self) #resumes the run loop after reopening port, not sure if this will work, need to test!
         finally:
             if self.ser:
                 self.ser.close()
